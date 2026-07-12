@@ -55,7 +55,8 @@
   .mini:active{background:var(--line);}
   .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
   .grid.specials{grid-template-columns:repeat(5,1fr);}
-  .tgrid{display:grid; grid-template-columns:repeat(4, var(--card-w)); justify-content:center; gap:7px; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  .tgrid{display:flex; flex-direction:column; align-items:center; gap:6px; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  .half{display:grid; grid-template-columns:repeat(4, var(--card-w)); gap:7px;}
   .gflags{margin-left:auto; font-size:15px; letter-spacing:3px;}
   .totop{margin-left:auto; flex:none; width:34px; height:30px; border:1px solid var(--line); border-radius:8px;
     font-size:17px; line-height:1; color:var(--paper); display:flex; align-items:center; justify-content:center;}
@@ -81,7 +82,12 @@
   .gbox{border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; font-weight:900;}
   .gbox small{font-size:9px; letter-spacing:1.5px; font-weight:700;}
   .gbox span{font-size:24px; line-height:1.1;}
-  .spine{grid-column:1/-1; border-top:1px dashed var(--line); margin:3px 6px;}
+  .spine{width:100%; max-width:calc(4 * var(--card-w) + 21px); border-top:1px dashed var(--line); margin:2px 0;}
+
+  @media (min-width: 800px) {
+    .tgrid{flex-direction:row; justify-content:center; align-items:stretch;}
+    .spine{width:0; max-width:none; border-top:none; border-left:1px dashed var(--line); margin:0 6px;}
+  }
 
   /* ---------- chips: the sticker slots ---------- */
   .chip{position:relative; aspect-ratio:3/4; border-radius:var(--radius);
@@ -580,19 +586,22 @@ function renderAlbum(){
       var c = function(n){ return chipHTML(STICKERS[ID2IDX.get(t[0]+n)]); };
       html += '<div class="team" id="t-'+t[0]+'"><div class="tgrid" data-paint="1">';
       /* left page: header cell + badge + 2, then 3-6, 7-10 */
+      html += '<div class="half">';
       html += '<div class="tlabel"><span class="flag">'+(FLAGS[t[0]]||"")+'</span>'+
               '<span class="tn"><b>'+t[0]+'</b> '+t[1]+'</span>'+
               '<button class="mini" data-ownall="'+t[0]+'">⇄ Invert all 20</button></div>';
       html += c(1)+c(2);
       for(var n=3;n<=10;n++) html += c(n);
+      html += '</div>';
       /* page turn */
       html += '<div class="spine"></div>';
       /* right page: 11, 12, wide team photo 13, then 14-17, group box + 18-20 */
+      html += '<div class="half">';
       html += c(11)+c(12)+c(13);
       for(n=14;n<=17;n++) html += c(n);
       html += '<div class="gbox" style="background:'+g[1]+';color:'+inkFor(g[1])+'"><small>GROUP</small><span>'+g[0]+'</span></div>';
       html += c(18)+c(19)+c(20);
-      html += '</div></div>';
+      html += '</div></div></div>';
     });
   });
   document.getElementById("album").innerHTML = html;
