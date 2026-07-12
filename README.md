@@ -8,5 +8,8 @@ Your friend opens it and instantly sees **you give / you get**.
 - One static file (`index.html`) — everything runs in the browser
 - Your collection is saved locally on your device
 - The share link encodes your whole collection in ~250 characters
+- Uses [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (via CDN) for local device-to-device sync
+
+**Note:** This project is mostly "vibe coded", so it most likely contains bugs—but that's fine! It's meant to be a simple, throwaway utility for the World Cup.
 
 Live at: `https://<username>.github.io/<repo>/` (GitHub Pages, deploys on push to `main`)

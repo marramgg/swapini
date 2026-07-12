@@ -54,7 +54,7 @@
   .mini{font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--paper);}
   .mini:active{background:var(--line);}
   .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-  .grid.specials{grid-template-columns:repeat(5,1fr);}
+  .grid.specials{grid-template-columns:repeat(4, var(--card-w)); justify-content:center; gap:7px;}
   .tgrid{display:flex; flex-direction:column; align-items:center; gap:6px; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
   .half{display:grid; grid-template-columns:repeat(4, var(--card-w)); gap:7px;}
   .gflags{margin-left:auto; font-size:15px; letter-spacing:3px;}
@@ -62,6 +62,10 @@
     font-size:17px; line-height:1; color:var(--paper); display:flex; align-items:center; justify-content:center;}
   .gflags + .totop{margin-left:8px;}
   .totop:active{background:var(--line);}
+  details.group-fold summary::-webkit-details-marker{display:none;}
+  details.group-fold summary{list-style:none; cursor:pointer;}
+  details.group-fold summary::after{content:"▾"; font-size:16px; transition:transform .2s; margin-left:12px; color:var(--foil);}
+  details.group-fold:not([open]) summary::after{transform:rotate(-90deg);}
   .index{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
   .ixg{position:relative; border-radius:12px; padding:6px 44px 6px 6px; overflow:hidden;}
   .ixg .big{position:absolute; right:6px; top:50%; transform:translateY(-50%);
@@ -87,6 +91,7 @@
   @media (min-width: 800px) {
     .tgrid{flex-direction:row; justify-content:center; align-items:stretch;}
     .spine{width:0; max-width:none; border-top:none; border-left:1px dashed var(--line); margin:0 6px;}
+    .grid.specials{grid-template-columns:repeat(8, var(--card-w));}
   }
 
   /* ---------- chips: the sticker slots ---------- */
@@ -215,25 +220,6 @@
     font-size:11px; padding:8px; background:var(--pitch); border:1px solid var(--line); border-radius:8px;
     max-height:80px; overflow-y:auto; color:var(--muted);}
 
-  /* ---------- history ---------- */
-  .tx-card{background:var(--pitch-deep); border:1px solid var(--line); border-radius:14px;
-    padding:14px; margin:10px 2px;}
-  .tx-card.undone{opacity:.5;}
-  .tx-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
-  .tx-head .tx-time{font-size:12px; color:var(--muted); flex:1;}
-  .tx-head .tx-name{font-weight:800; font-size:14px;}
-  .tx-head .tx-badge{font-size:11px; padding:3px 8px; border-radius:999px; font-weight:800;}
-  .tx-head .tx-badge.done{background:var(--get); color:#fff;}
-  .tx-head .tx-badge.rev{background:var(--line); color:var(--muted);}
-  .tx-section{margin:4px 0;}
-  .tx-section h4{margin:0 0 2px; font-size:12px; text-transform:uppercase; letter-spacing:.5px;}
-  .tx-section.recv h4{color:#9CD3A8;}
-  .tx-section.give h4{color:#F0B48F;}
-  .tx-section .stickers{font-size:13px; line-height:1.7; color:var(--paper);}
-  .tx-undo-btn{font-size:12px; padding:6px 12px; border:1px solid var(--line);
-    border-radius:999px; color:var(--paper); margin-top:8px;}
-  .tx-undo-btn:active{background:var(--line);}
-
   /* ---------- menu ---------- */
   nav{position:absolute; top:calc(100% + 4px); left:14px; z-index:100; display:none; flex-direction:column;
     background:var(--pitch-deep); border:1px solid var(--line); border-radius:12px;
@@ -256,7 +242,7 @@
 <body>
 
 <header>
-  <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><div class="header-btns"><button id="qrbtn" aria-label="QR Code Sync" style="display:none;">Open on another device</button><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button></div></div>
+  <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><div class="header-btns"><button id="qrbtn" aria-label="QR Code Sync" style="display:none;">Open on another device</button><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button><a href="https://github.com/marramgg/swapini" target="_blank" aria-label="GitHub Repository" class="helpbtn" style="text-decoration:none"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></a></div></div>
   <div class="progress-wrap">
     <button class="hamburger" id="hamburgermenu" aria-label="Menu">☰</button>
     <div class="progress"><div class="bar"><i id="barfill"></i></div><span class="stat" id="topstat">0 / 980</span></div>
@@ -265,7 +251,6 @@
     <button role="tab" aria-selected="true" data-tab="album"><span class="big">▦</span>Album</button>
     <button role="tab" aria-selected="false" data-tab="dupes"><span class="big">×2</span>Dupes</button>
     <button role="tab" aria-selected="false" data-tab="swap"><span class="big">⇄</span>Swap</button>
-    <button role="tab" aria-selected="false" data-tab="history"><span class="big">📋</span>History</button>
   </nav>
 </header>
 
@@ -349,11 +334,6 @@
       <button class="btn" id="settleapplybtn">Preview &amp; confirm</button>
       <div id="settlemsg"></div>
     </div>
-  </section>
-
-  <!-- HISTORY -->
-  <section id="scr-history" class="screen">
-    <div id="historylist"></div>
   </section>
 </main>
 
@@ -578,10 +558,10 @@ function chipHTML(s){
 }
 function renderAlbum(){
   var html = "";
-  html += '<div class="group-h"><span class="swatch" style="background:var(--foil)"></span><b>Intro &amp; Specials</b><button class="totop" aria-label="Back to top">⤒</button></div>';
+  html += '<details class="group-fold" open><summary class="group-h"><span class="swatch" style="background:var(--foil)"></span><b>Intro &amp; Specials</b><button class="totop" aria-label="Back to top">⤒</button></summary>';
   html += '<div class="team"><div class="grid specials" data-paint="1">';
   STICKERS.slice(0,20).forEach(function(s){ html += chipHTML(s); });
-  html += '</div></div>';
+  html += '</div></div></details>';
   CONFIG.groups.forEach(function(g){
     var gflags = g[2].map(function(t){ return FLAGS[t[0]]||""; }).join(" ");
     html += '<div class="group-h"><span class="swatch" style="background:'+g[1]+'"></span><b>Group '+g[0]+'</b><span class="gflags">'+gflags+'</span><button class="totop" aria-label="Back to top">⤒</button></div>';
