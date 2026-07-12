@@ -1043,6 +1043,19 @@ if(typeof window.qrcode !== "undefined"){
     qr.make();
     var wrap = document.getElementById("qrwrap");
     wrap.innerHTML = qr.createImgTag(5, 0) + '<div class="code-text">' + escapeHTML(url) + '</div>';
+    
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    var hintElem = document.getElementById("qrmodal").querySelector('.hint');
+    if (isMobile) {
+      hintElem.innerHTML = "You seem to be on a phone. Suggestion: copy the link below, share it with yourself on WhatsApp or Signal, and open it on your laptop.";
+      hintElem.style.color = "var(--primary)";
+      hintElem.style.fontWeight = "bold";
+    } else {
+      hintElem.innerHTML = "Scan this code with another device to sync your album data.";
+      hintElem.style.color = "";
+      hintElem.style.fontWeight = "";
+    }
+    
     document.getElementById("qrmodal").classList.add("open");
   });
 }
