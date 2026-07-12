@@ -153,10 +153,13 @@
   details.fold[open] summary{margin-bottom:8px;}
   @media (prefers-reduced-motion:reduce){ details.fold summary::after{transition:none;} }
   .team{scroll-margin-top:142px;}
-  .helpbtn{margin-left:auto; width:32px; height:32px; border-radius:50%;
+  .header-btns{margin-left:auto; display:flex; gap:8px; align-items:center;}
+  .helpbtn{width:32px; height:32px; border-radius:50%;
     border:1px solid var(--line); font-weight:800; font-size:15px; color:var(--paper);
     display:flex; align-items:center; justify-content:center;}
   .helpbtn:active{background:var(--line);}
+  #qrbtn{border-radius:999px; border:1px solid var(--line); font-weight:700; font-size:11px; color:var(--paper); padding:0 12px; height:32px; display:flex; align-items:center; justify-content:center; letter-spacing:0.5px; white-space:nowrap;}
+  #qrbtn:active{background:var(--line);}
   .field{margin:8px 0;}
   .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px;}
   .match{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
@@ -206,8 +209,8 @@
   .modal-box .settle-summary{font-size:15px; font-weight:800; margin:8px 0 16px; padding:10px;
     background:rgba(201,162,39,.1); border:1px solid var(--foil); border-radius:var(--radius); text-align:center;}
   .modal-box .rowbtns{justify-content:center;}
-  .qr-wrap{display:flex; flex-direction:column; align-items:center; gap:12px; margin:12px 0;}
-  .qr-wrap canvas{border-radius:8px; background:#fff; padding:12px; image-rendering:pixelated;}
+  .qr-wrap{display:flex; flex-direction:column; align-items:center; gap:12px; margin:12px 0; overflow:hidden; width:100%;}
+  .qr-wrap img, .qr-wrap canvas{border-radius:8px; background:#fff; padding:12px; image-rendering:pixelated; max-width:100%; height:auto; box-sizing:border-box;}
   .qr-wrap .code-text{width:100%; word-break:break-all; font-family:ui-monospace,Menlo,monospace;
     font-size:11px; padding:8px; background:var(--pitch); border:1px solid var(--line); border-radius:8px;
     max-height:80px; overflow-y:auto; color:var(--muted);}
@@ -253,7 +256,7 @@
 <body>
 
 <header>
-  <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><button class="helpbtn" id="qrbtn" aria-label="QR Code Sync" style="display:none; font-size:11px; letter-spacing:0.5px">QR</button><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button></div>
+  <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><div class="header-btns"><button id="qrbtn" aria-label="QR Code Sync" style="display:none;">Open on another device</button><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button></div></div>
   <div class="progress-wrap">
     <button class="hamburger" id="hamburgermenu" aria-label="Menu">☰</button>
     <div class="progress"><div class="bar"><i id="barfill"></i></div><span class="stat" id="topstat">0 / 980</span></div>
