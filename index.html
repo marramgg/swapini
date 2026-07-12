@@ -696,7 +696,7 @@ function makeQE(opts){
 
 /* --- dupes context: acts on SPARES --- */
 var qeDupes = makeQE({
-  input:"qinput", modeRe:/^(a|f|r)(t?)/,
+  input:"qinput", modeRe:/^(a|f|r)(t(?![a-z]{2}\d))?/,
   after: renderDupes,
   token: function(mode, tok, st){
     var r = resolveTok(tok, st);
@@ -727,7 +727,7 @@ function clearHL(){
   HL = [];
 }
 var qeAlbum = makeQE({
-  input:"qalbum", modeRe:/^(a|f|r|i)(t?)/,
+  input:"qalbum", modeRe:/^(a|f|r|i)(t(?![a-z]{2}\d))?/,
   onFindStart: clearHL,
   onEnd: function(mode, st){
     if(mode === "f" && st.findFirst){
