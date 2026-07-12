@@ -1,0 +1,150 @@
+{
+  "albumId": "fwc2026",
+  "title": "FIFA World Cup 2026",
+  "configVersion": 1,
+  "totalStickers": 980,
+  "flatIndexOrder": "specials first (00, FWC1..FWC19), then groups A-L in order, 4 teams per group in listed order, slots 1-20 per team",
+  "specials": {
+    "sectionLabel": "Intro & Specials",
+    "color": "#C9A227",
+    "stickers": [
+      { "id": "00", "label": "Panini Logo" },
+      { "id": "FWC1", "label": "Official Emblem 1/2" },
+      { "id": "FWC2", "label": "Official Emblem 2/2" },
+      { "id": "FWC3", "label": "Official Mascots" },
+      { "id": "FWC4", "label": "Official Slogan" },
+      { "id": "FWC5", "label": "Official Ball" },
+      { "id": "FWC6", "label": "Host Country: Canada" },
+      { "id": "FWC7", "label": "Host Country: Mexico" },
+      { "id": "FWC8", "label": "Host Country: USA" },
+      { "id": "FWC9", "label": "FIFA Museum / History" },
+      { "id": "FWC10", "label": "FIFA Museum / History" },
+      { "id": "FWC11", "label": "FIFA Museum / History" },
+      { "id": "FWC12", "label": "FIFA Museum / History" },
+      { "id": "FWC13", "label": "FIFA Museum / History" },
+      { "id": "FWC14", "label": "FIFA Museum / History" },
+      { "id": "FWC15", "label": "FIFA Museum / History" },
+      { "id": "FWC16", "label": "FIFA Museum / History" },
+      { "id": "FWC17", "label": "FIFA Museum / History" },
+      { "id": "FWC18", "label": "FIFA Museum / History" },
+      { "id": "FWC19", "label": "FIFA Museum / History" }
+    ]
+  },
+  "perTeam": {
+    "count": 20,
+    "slotLabels": { "1": "Team Logo (foil)", "13": "Team Photo" }
+  },
+  "groups": [
+    {
+      "key": "A", "color": "#7CB342",
+      "teams": [
+        { "code": "MEX", "name": "Mexico" },
+        { "code": "RSA", "name": "South Africa" },
+        { "code": "KOR", "name": "Korea Republic" },
+        { "code": "CZE", "name": "Czechia" }
+      ]
+    },
+    {
+      "key": "B", "color": "#E53935",
+      "teams": [
+        { "code": "CAN", "name": "Canada" },
+        { "code": "BIH", "name": "Bosnia-Herzegovina" },
+        { "code": "QAT", "name": "Qatar" },
+        { "code": "SUI", "name": "Switzerland" }
+      ]
+    },
+    {
+      "key": "C", "color": "#EEE84C",
+      "teams": [
+        { "code": "BRA", "name": "Brazil" },
+        { "code": "MAR", "name": "Morocco" },
+        { "code": "HAI", "name": "Haiti" },
+        { "code": "SCO", "name": "Scotland" }
+      ]
+    },
+    {
+      "key": "D", "color": "#3949AB",
+      "teams": [
+        { "code": "USA", "name": "USA" },
+        { "code": "PAR", "name": "Paraguay" },
+        { "code": "AUS", "name": "Australia" },
+        { "code": "TUR", "name": "Türkiye" }
+      ]
+    },
+    {
+      "key": "E", "color": "#F4511E",
+      "teams": [
+        { "code": "GER", "name": "Germany" },
+        { "code": "CUW", "name": "Curaçao" },
+        { "code": "CIV", "name": "Côte d'Ivoire" },
+        { "code": "ECU", "name": "Ecuador" }
+      ]
+    },
+    {
+      "key": "F", "color": "#1E5E4A",
+      "teams": [
+        { "code": "NED", "name": "Netherlands" },
+        { "code": "JPN", "name": "Japan" },
+        { "code": "SWE", "name": "Sweden" },
+        { "code": "TUN", "name": "Tunisia" }
+      ]
+    },
+    {
+      "key": "G", "color": "#B39DDB",
+      "teams": [
+        { "code": "BEL", "name": "Belgium" },
+        { "code": "EGY", "name": "Egypt" },
+        { "code": "IRN", "name": "IR Iran" },
+        { "code": "NZL", "name": "New Zealand" }
+      ]
+    },
+    {
+      "key": "H", "color": "#4DB6AC",
+      "teams": [
+        { "code": "ESP", "name": "Spain" },
+        { "code": "CPV", "name": "Cabo Verde" },
+        { "code": "KSA", "name": "Saudi Arabia" },
+        { "code": "URU", "name": "Uruguay" }
+      ]
+    },
+    {
+      "key": "I", "color": "#5E35B1",
+      "teams": [
+        { "code": "FRA", "name": "France" },
+        { "code": "SEN", "name": "Senegal" },
+        { "code": "IRQ", "name": "Iraq" },
+        { "code": "NOR", "name": "Norway" }
+      ]
+    },
+    {
+      "key": "J", "color": "#F8A5A0",
+      "teams": [
+        { "code": "ARG", "name": "Argentina" },
+        { "code": "ALG", "name": "Algeria" },
+        { "code": "AUT", "name": "Austria" },
+        { "code": "JOR", "name": "Jordan" }
+      ]
+    },
+    {
+      "key": "K", "color": "#E91E63",
+      "teams": [
+        { "code": "POR", "name": "Portugal" },
+        { "code": "COD", "name": "Congo DR" },
+        { "code": "UZB", "name": "Uzbekistan" },
+        { "code": "COL", "name": "Colombia" }
+      ]
+    },
+    {
+      "key": "L", "color": "#7B2B35",
+      "teams": [
+        { "code": "ENG", "name": "England" },
+        { "code": "CRO", "name": "Croatia" },
+        { "code": "GHA", "name": "Ghana" },
+        { "code": "PAN", "name": "Panama" }
+      ]
+    }
+  ],
+  "excluded": {
+    "note": "Coca-Cola promo stickers CC1-CC12 and all regional parallels (border colors, Crumple, etc.) are intentionally out of scope for v1. Use the free-text extras field to mention them in a trade."
+  }
+}

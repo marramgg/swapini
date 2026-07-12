@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>StickerSwap · Scan Spike</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap');
+
+:root{
+  --ink:#0E1216;
+  --panel:#161C23;
+  --panel2:#1C242D;
+  --line:#2A333D;
+  --paper:#F4F1E7;
+  --text:#E9EDF1;
+  --muted:#93A0AC;
+  --green:#33C46E;
+  --amber:#F2B33D;
+  --red:#E25B4E;
+  --gold:#C9A227;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--ink);color:var(--text);font-family:'Barlow',system-ui,-apple-system,sans-serif;font-size:16px}
+body{padding-bottom:40px}
+
+header{padding:14px 16px 10px;display:flex;align-items:baseline;justify-content:space-between}
+.eyebrow{font-size:11px;letter-spacing:.22em;color:var(--gold);font-weight:600}
+h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:30px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+.ver{font-size:11px;color:var(--muted)}
+
+.tabs{display:flex;gap:8px;padding:0 16px 12px;position:sticky;top:0;background:var(--ink);z-index:20;padding-top:6px}
+.tab{flex:1;text-align:center;padding:10px 0;border:1px solid var(--line);border-radius:10px;
+  font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;letter-spacing:.08em;
+  color:var(--muted);background:var(--panel);cursor:pointer;user-select:none}
+.tab.active{color:var(--ink);background:var(--paper);border-color:var(--paper)}
+
+.pane{display:none;padding:0 16px}
+.pane.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.card h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.hint{color:var(--muted);font-size:14px;line-height:1.45}
+.hint b{color:var(--text)}
+
+button.big{width:100%;padding:14px;border:none;border-radius:12px;background:var(--green);color:#08120C;
+  font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+button.big:disabled{background:var(--line);color:var(--muted)}
+button.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+
+/* ---- camera ---- */
+.camwrap{position:relative;border-radius:14px;overflow:hidden;background:#000;margin-bottom:12px;
+  box-shadow:inset 0 0 0 5px var(--line);transition:box-shadow .18s}
+.camwrap.st-search{box-shadow:inset 0 0 0 5px var(--red)}
+.camwrap.st-align{box-shadow:inset 0 0 0 5px var(--amber)}
+.camwrap.st-locked{box-shadow:inset 0 0 0 5px var(--green)}
+.camwrap.flash{box-shadow:inset 0 0 0 14px var(--green)}
+video{display:block;width:100%;max-height:62vh;object-fit:cover}
+#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.statusbar{position:absolute;left:0;right:0;bottom:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,.72));
+  display:flex;align-items:center;justify-content:space-between}
+#statusTxt{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:600;letter-spacing:.04em;text-shadow:0 1px 3px #000}
+.prog{width:90px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+.prog>i{display:block;height:100%;width:0;background:var(--amber);transition:width .1s linear}
+
+.thumbs{display:flex;gap:10px;overflow-x:auto;padding:4px 2px}
+.thumb{flex:0 0 auto;width:130px;cursor:pointer}
+.thumb img{width:100%;border-radius:8px;border:1px solid var(--line);display:block}
+.thumb .cap{font-size:11px;color:var(--muted);margin-top:3px;display:flex;justify-content:space-between}
+.thumb .cap b{color:var(--green);font-weight:600}
+
+.settings summary{cursor:pointer;font-size:13px;color:var(--muted);letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:10px;margin-top:12px}
+.row label{flex:0 0 108px;font-size:13px;color:var(--muted)}
+.row input[type=range]{flex:1;accent-color:var(--green)}
+.row output{flex:0 0 44px;text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+
+/* ---- analyze ---- */
+.canvasbox{position:relative;border-radius:12px;overflow:hidden;background:#000}
+.canvasbox canvas{display:block;width:100%;height:auto}
+#gridCanvas{position:absolute;inset:0;width:100%;height:100%}
+.steps{display:flex;gap:6px;margin-bottom:10px}
+.step{flex:1;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;
+  letter-spacing:.06em;padding:6px 0;border-radius:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+.step.on{color:var(--gold);border-color:var(--gold)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stepper{display:flex;align-items:center;justify-content:space-between;background:var(--panel2);
+  border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.stepper span{font-size:12px;color:var(--muted)}
+.stepper .val{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
+.stepper button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel);
+  color:var(--text);font-size:18px;cursor:pointer}
+.scorebar{display:flex;align-items:baseline;justify-content:space-between;margin-top:12px;padding:10px 12px;
+  background:var(--panel2);border-radius:10px;border:1px solid var(--line)}
+.scorebar .n{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--green)}
+.scorebar .acc{font-size:13px;color:var(--muted)}
+.scorebar .acc b{color:var(--gold);font-size:16px}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted);white-space:pre;overflow-x:auto;margin-top:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.pill{padding:10px 0;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);
+  font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:.05em;cursor:pointer}
+.pill.on{border-color:var(--gold);color:var(--gold)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--paper);color:var(--ink);
+  padding:10px 18px;border-radius:10px;font-weight:600;font-size:14px;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="eyebrow">STICKERSWAP LAB</div>
+    <h1>Scan spike</h1>
+  </div>
+  <div class="ver">v0.1 · FWC 2026</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" id="tabScan">Scan</div>
+  <div class="tab" id="tabAnalyze">Analyze</div>
+</div>
+
+<!-- ================= SCAN ================= -->
+<div class="pane active" id="paneScan">
+  <div class="card">
+    <p class="hint"><b>Auto-shutter test.</b> Album flat on a table, phone above it, whole spread inside the frame.
+    Border turns <b style="color:var(--amber)">amber</b> when the page is found, then hold still —
+    on <b style="color:var(--green)">green</b> + chime it has captured. Turn the page to re-arm.</p>
+    <div style="height:10px"></div>
+    <button class="big" id="btnStart">Start camera</button>
+    <p class="hint" id="camMsg" style="display:none;margin-top:10px;color:var(--amber)"></p>
+  </div>
+
+  <div class="camwrap" id="camwrap" style="display:none">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <div class="statusbar">
+      <span id="statusTxt">–</span>
+      <div class="prog"><i id="progFill"></i></div>
+    </div>
+  </div>
+
+  <div class="card" id="capCard" style="display:none">
+    <h2>Captures <span id="capCount" style="color:var(--gold)"></span></h2>
+    <p class="hint">Tap a capture to open it in Analyze.</p>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+
+  <div class="card">
+    <details class="settings">
+      <summary>TUNING</summary>
+      <div class="row"><label>Page fill min</label><input type="range" id="sFill" min="20" max="80" value="42"><output id="oFill">42%</output></div>
+      <div class="row"><label>Hold time</label><input type="range" id="sStable" min="300" max="1500" step="50" value="700"><output id="oStable">700ms</output></div>
+      <div class="row"><label>Blur gate</label><input type="range" id="sBlur" min="0" max="120" value="25"><output id="oBlur">25</output></div>
+      <div class="row"><label>Chime</label><input type="checkbox" id="cChime" checked style="accent-color:var(--green)"></div>
+    </details>
+  </div>
+</div>
+
+<!-- ================= ANALYZE ================= -->
+<div class="pane" id="paneAnalyze">
+  <div class="steps">
+    <div class="step on" id="st1">1 · Photo</div>
+    <div class="step" id="st2">2 · Corners</div>
+    <div class="step" id="st3">3 · Classify</div>
+  </div>
+
+  <div class="card" id="loadCard">
+    <p class="hint">Load a photo of a spread, or capture one in the Scan tab.
+    Works offline from a plain file — no camera needed here.</p>
+    <div style="height:10px"></div>
+    <button class="big ghost" id="btnPick">Choose photo</button>
+    <input type="file" id="filePick" accept="image/*">
+  </div>
+
+  <div class="card" id="cornerCard" style="display:none">
+    <h2>Corners</h2>
+    <p class="hint"><b>One page at a time.</b> Presets are pre-sized to a spread filling the photo —
+    pick Left or Right, then only nudge the handles that are off (magnifier appears while dragging).</p>
+    <div class="grid3">
+      <button class="pill" data-p="left">Left page</button>
+      <button class="pill" data-p="spread">Spread</button>
+      <button class="pill" data-p="right">Right page</button>
+    </div>
+    <div class="canvasbox"><canvas id="srcCanvas"></canvas></div>
+    <div style="height:10px"></div>
+    <button class="big" id="btnRectify">Rectify page</button>
+  </div>
+
+  <div class="card" id="gridCard" style="display:none">
+    <h2>Slots</h2>
+    <p class="hint">Fit the grid to the slot pitch. <b>Mask</b> cells that aren't slots, <b>Merge 2×</b> joins a cell with its right neighbor for double-wide slots (team photo). Then Fix: <b>tap wrong verdicts</b> — accuracy is the spike metric.</p>
+    <div class="grid3">
+      <button class="pill on" id="modeFix">Fix verdicts</button>
+      <button class="pill" id="modeMask">Mask</button>
+      <button class="pill" id="modeMerge">Merge 2×</button>
+    </div>
+    <div class="canvasbox">
+      <canvas id="rectCanvas"></canvas>
+      <canvas id="gridCanvas"></canvas>
+    </div>
+
+    <div class="grid2">
+      <div class="stepper"><span>Rows</span><button data-k="rows" data-d="-1">−</button><span class="val" id="vRows">3</span><button data-k="rows" data-d="1">+</button></div>
+      <div class="stepper"><span>Cols</span><button data-k="cols" data-d="-1">−</button><span class="val" id="vCols">4</span><button data-k="cols" data-d="1">+</button></div>
+    </div>
+    <div class="row"><label>Top margin</label><input type="range" id="gMT" min="0" max="45" value="16"><output id="oMT">16%</output></div>
+    <div class="row"><label>Bottom margin</label><input type="range" id="gMB" min="0" max="45" value="6"><output id="oMB">6%</output></div>
+    <div class="row"><label>Left margin</label><input type="range" id="gML" min="0" max="45" value="7"><output id="oML">7%</output></div>
+    <div class="row"><label>Right margin</label><input type="range" id="gMR" min="0" max="45" value="7"><output id="oMR">7%</output></div>
+    <div class="row"><label>Cell gap</label><input type="range" id="gGap" min="0" max="30" value="8"><output id="oGap">8%</output></div>
+    <div class="row"><label>Filled if C ≥</label><input type="range" id="gThr" min="2" max="120" value="44"><output id="oThr">44</output></div>
+    <div class="row"><label>…and E ≥</label><input type="range" id="gThrE" min="0" max="40" value="0"><output id="oThrE">0</output></div>
+
+    <div class="scorebar">
+      <div><span class="n" id="filledN">–</span> <span class="hint">filled</span></div>
+      <div class="acc">corrections <b id="corrN">0</b> · accuracy <b id="accN">–</b></div>
+    </div>
+    <div class="grid3" style="grid-template-columns:1fr 1fr;margin-top:8px">
+      <button class="pill" id="btnClearFix">Clear corrections</button>
+      <button class="pill" id="btnTpl">Copy template JSON</button>
+    </div>
+    <details class="settings" style="margin-top:10px"><summary>PER-CELL METRICS</summary><div class="mono" id="metricsDump"></div></details>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ============ shared helpers ============ */
+const $ = id => document.getElementById(id);
+const toastEl = $('toast'); let toastT;
+function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>toastEl.classList.remove('show'), 2200); }
+
+/* Otsu threshold on a grayscale Uint8ClampedArray */
+function otsu(gray){
+  const hist = new Float64Array(256);
+  for (let i=0;i<gray.length;i++) hist[gray[i]]++;
+  const total = gray.length;
+  let sum = 0; for (let t=0;t<256;t++) sum += t*hist[t];
+  let sumB=0, wB=0, maxVar=0, thr=127;
+  for (let t=0;t<256;t++){
+    wB += hist[t]; if (wB===0) continue;
+    const wF = total - wB; if (wF===0) break;
+    sumB += t*hist[t];
+    const mB = sumB/wB, mF = (sum-sumB)/wF;
+    const v = wB*wF*(mB-mF)*(mB-mF);
+    if (v > maxVar){ maxVar = v; thr = t; }
+  }
+  return thr;
+}
+
+/* grayscale from ImageData into Uint8ClampedArray */
+function toGray(img){
+  const d = img.data, n = img.width*img.height, g = new Uint8ClampedArray(n);
+  for (let i=0,j=0;i<n;i++,j+=4) g[i] = (d[j]*77 + d[j+1]*150 + d[j+2]*29) >> 8;
+  return g;
+}
+
+/* Largest bright connected component → corners via extreme points.
+   Returns {corners:[[x,y]x4 tl,tr,br,bl], areaFrac, quadFrac} or null */
+function detectQuad(grayIn, w, h){
+  // light 3x3 box blur to stabilize thresholding on textured real photos
+  const gray = new Uint8ClampedArray(w*h);
+  for (let y=0;y<h;y++){
+    for (let x=0;x<w;x++){
+      let s=0, n=0;
+      for (let dy=-1;dy<=1;dy++){ const yy=y+dy; if (yy<0||yy>=h) continue;
+        for (let dx=-1;dx<=1;dx++){ const xx=x+dx; if (xx<0||xx>=w) continue; s+=grayIn[yy*w+xx]; n++; } }
+      gray[y*w+x] = s/n;
+    }
+  }
+  const thr = otsu(gray);
+  const seen = new Uint8Array(w*h);
+  const stack = new Int32Array(w*h);
+  let best = null;
+  for (let start=0; start<w*h; start++){
+    if (seen[start] || gray[start] <= thr) continue;
+    let sp = 0; stack[sp++] = start; seen[start] = 1;
+    let area = 0;
+    let minS= 1e9,maxS=-1e9,minD= 1e9,maxD=-1e9;
+    let pTL=start,pBR=start,pTR=start,pBL=start;
+    while (sp > 0){
+      const p = stack[--sp]; area++;
+      const x = p % w, y = (p-x)/w;
+      const s = x+y, d = x-y;
+      if (s<minS){minS=s;pTL=p} if (s>maxS){maxS=s;pBR=p}
+      if (d>maxD){maxD=d;pTR=p} if (d<minD){minD=d;pBL=p}
+      if (x>0   && !seen[p-1] && gray[p-1]>thr){seen[p-1]=1;stack[sp++]=p-1}
+      if (x<w-1 && !seen[p+1] && gray[p+1]>thr){seen[p+1]=1;stack[sp++]=p+1}
+      if (y>0   && !seen[p-w] && gray[p-w]>thr){seen[p-w]=1;stack[sp++]=p-w}
+      if (y<h-1 && !seen[p+w] && gray[p+w]>thr){seen[p+w]=1;stack[sp++]=p+w}
+    }
+    if (!best || area > best.area)
+      best = {area, pts:[pTL,pTR,pBR,pBL]};
+  }
+  if (!best) return null;
+  const c = best.pts.map(p => [p % w, Math.floor(p / w)]);
+  // shoelace quad area
+  let qa = 0;
+  for (let i=0;i<4;i++){ const [x1,y1]=c[i],[x2,y2]=c[(i+1)%4]; qa += x1*y2 - x2*y1; }
+  qa = Math.abs(qa)/2;
+  return { corners:c, areaFrac: best.area/(w*h), quadFrac: qa>0 ? best.area/qa : 0 };
+}
+
+/* Laplacian variance (sharpness). gray at given w,h */
+function sharpness(gray, w, h){
+  let sum=0, sum2=0, n=0;
+  for (let y=1;y<h-1;y++){
+    for (let x=1;x<w-1;x++){
+      const i = y*w+x;
+      const v = 4*gray[i] - gray[i-1] - gray[i+1] - gray[i-w] - gray[i+w];
+      sum += v; sum2 += v*v; n++;
+    }
+  }
+  const mean = sum/n;
+  return sum2/n - mean*mean;
+}
+
+/* Solve homography mapping dst rect (0,0)-(W,H) → src quad, via 8x8 Gaussian elimination.
+   src: [[x,y]x4] in order tl,tr,br,bl. Returns h[9]. */
+function homographyDstToSrc(W, H, src){
+  const dst = [[0,0],[W,0],[W,H],[0,H]];
+  const A = [], b = [];
+  for (let i=0;i<4;i++){
+    const [x,y] = dst[i], [X,Y] = src[i];
+    A.push([x,y,1,0,0,0,-x*X,-y*X]); b.push(X);
+    A.push([0,0,0,x,y,1,-x*Y,-y*Y]); b.push(Y);
+  }
+  // gaussian elimination w/ partial pivot
+  for (let col=0; col<8; col++){
+    let piv = col;
+    for (let r=col+1;r<8;r++) if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r;
+    [A[col],A[piv]] = [A[piv],A[col]]; [b[col],b[piv]] = [b[piv],b[col]];
+    const p = A[col][col]; if (Math.abs(p) < 1e-12) return null;
+    for (let r=0;r<8;r++){
+      if (r===col) continue;
+      const f = A[r][col]/p;
+      for (let cc=col; cc<8; cc++) A[r][cc] -= f*A[col][cc];
+      b[r] -= f*b[col];
+    }
+  }
+  const s = []; for (let i=0;i<8;i++) s.push(b[i]/A[i][i]);
+  return [s[0],s[1],s[2],s[3],s[4],s[5],s[6],s[7],1];
+}
+
+/* warp src ImageData through H (dst→src) into out canvas W×H, bilinear */
+function warp(srcImg, Hm, W, Hh){
+  const out = new ImageData(W, Hh);
+  const sd = srcImg.data, od = out.data, sw = srcImg.width, sh = srcImg.height;
+  for (let y=0;y<Hh;y++){
+    for (let x=0;x<W;x++){
+      const den = Hm[6]*x + Hm[7]*y + Hm[8];
+      const sx = (Hm[0]*x + Hm[1]*y + Hm[2]) / den;
+      const sy = (Hm[3]*x + Hm[4]*y + Hm[5]) / den;
+      const o = (y*W + x) * 4;
+      if (sx < 0 || sy < 0 || sx >= sw-1 || sy >= sh-1){ od[o+3] = 255; continue; }
+      const x0 = sx|0, y0 = sy|0, fx = sx-x0, fy = sy-y0;
+      const i00=(y0*sw+x0)*4, i10=i00+4, i01=i00+sw*4, i11=i01+4;
+      for (let ch=0; ch<3; ch++){
+        od[o+ch] =
+          sd[i00+ch]*(1-fx)*(1-fy) + sd[i10+ch]*fx*(1-fy) +
+          sd[i01+ch]*(1-fx)*fy     + sd[i11+ch]*fx*fy;
+      }
+      od[o+3] = 255;
+    }
+  }
+  return out;
+}
+
+/* Hasler–Süsstrunk colorfulness + mean saturation + edge density for a cell region */
+function cellMetrics(img, x0, y0, x1, y1){
+  const d = img.data, w = img.width;
+  let n=0, sRG=0, sRG2=0, sYB=0, sYB2=0, satSum=0;
+  let edge=0, en=0, prevL=-1;
+  for (let y=y0; y<y1; y+=2){
+    prevL = -1;
+    for (let x=x0; x<x1; x+=2){
+      const i = (y*w+x)*4, r=d[i], g=d[i+1], b=d[i+2];
+      const rg = r-g, yb = 0.5*(r+g)-b;
+      sRG+=rg; sRG2+=rg*rg; sYB+=yb; sYB2+=yb*yb; n++;
+      const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+      satSum += mx>0 ? (mx-mn)/mx : 0;
+      const L = (r*77+g*150+b*29)>>8;
+      if (prevL >= 0){ edge += Math.abs(L-prevL); en++; }
+      prevL = L;
+    }
+  }
+  if (n < 4) return {C:0, S:0, E:0};
+  const vRG = sRG2/n - (sRG/n)**2, vYB = sYB2/n - (sYB/n)**2;
+  const C = Math.sqrt(Math.max(0,vRG)+Math.max(0,vYB)) + 0.3*Math.hypot(sRG/n, sYB/n);
+  return {C: Math.round(C*10)/10, S: Math.round(satSum/n*100), E: Math.round(edge/Math.max(1,en)*10)/10};
+}
+
+/* ============ tabs ============ */
+const panes = {scan:[$('tabScan'),$('paneScan')], analyze:[$('tabAnalyze'),$('paneAnalyze')]};
+function showTab(name){
+  for (const k in panes){
+    panes[k][0].classList.toggle('active', k===name);
+    panes[k][1].classList.toggle('active', k===name);
+  }
+}
+$('tabScan').onclick = () => showTab('scan');
+$('tabAnalyze').onclick = () => showTab('analyze');
+
+/* ============ SCAN: auto-shutter ============ */
+const video = $('video'), overlay = $('overlay'), camwrap = $('camwrap');
+const statusTxt = $('statusTxt'), progFill = $('progFill');
+let audioCtx = null, stream = null, scanTimer = null;
+let state = 'search', stableMs = 0, prevCorners = null, lastValidT = 0, lastT = 0;
+const proc = document.createElement('canvas'); const procCtx = proc.getContext('2d', {willReadFrequently:true});
+const capCanvas = document.createElement('canvas'); const capCtx = capCanvas.getContext('2d', {willReadFrequently:true});
+const captures = [];
+
+const tune = {
+  fill:  () => $('sFill').value/100,
+  hold:  () => +$('sStable').value,
+  blur:  () => +$('sBlur').value,
+  chime: () => $('cChime').checked,
+};
+[['sFill','oFill','%'],['sStable','oStable','ms'],['sBlur','oBlur','']].forEach(([s,o,u])=>{
+  $(s).addEventListener('input', ()=> $(o).textContent = $(s).value + u);
+});
+
+function chime(){
+  if (!audioCtx || !tune.chime()) return;
+  const t = audioCtx.currentTime;
+  [[880,0],[1318.5,0.09]].forEach(([f,dt])=>{
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = f; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001, t+dt);
+    g.gain.exponentialRampToValueAtTime(0.3, t+dt+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dt+0.13);
+    o.start(t+dt); o.stop(t+dt+0.15);
+  });
+}
+
+function camFail(detail){
+  const el = $('camMsg');
+  el.style.display = 'block';
+  el.innerHTML = 'Camera blocked in this context (' + detail + '). Embedded previews — including the Claude app — can\u2019t grant camera access. Open this file from an <b>HTTPS link in Safari or Chrome</b> (GitHub Pages works). The <b>Analyze tab works everywhere</b>, including right here.';
+}
+
+$('btnStart').onclick = async () => {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    camFail(window.isSecureContext ? 'no camera API in this webview' : 'not an HTTPS page');
+    return;
+  }
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080} },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+    $('btnStart').style.display = 'none';
+    camwrap.style.display = 'block';
+    $('capCard').style.display = 'block';
+    lastT = performance.now();
+    scanTimer = setInterval(tick, 110);
+  }catch(e){
+    camFail(e.name || e.message);
+  }
+};
+
+function setState(s, label){
+  state = s;
+  camwrap.className = 'camwrap st-' + (s === 'align' ? 'align' : s === 'locked' ? 'locked' : 'search');
+  statusTxt.textContent = label;
+}
+
+function tick(){
+  if (!video.videoWidth) return;
+  const now = performance.now(), dt = now - lastT; lastT = now;
+
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const pw = 320, ph = Math.round(320 * vh / vw);
+  if (proc.width !== pw){ proc.width = pw; proc.height = ph; }
+  procCtx.drawImage(video, 0, 0, pw, ph);
+  const gray = toGray(procCtx.getImageData(0, 0, pw, ph));
+  const q = detectQuad(gray, pw, ph);
+
+  const valid = q && q.areaFrac >= tune.fill() && q.quadFrac > 0.6 && q.quadFrac < 1.6;
+  drawOverlay(q, valid, pw, ph);
+
+  if (state === 'locked'){
+    if (valid){ lastValidT = now; }
+    else if (now - lastValidT > 500){ setState('search', 'Find the next spread'); stableMs = 0; prevCorners = null; }
+    return;
+  }
+
+  if (!valid){
+    setState('search', 'Fit the whole spread in frame');
+    stableMs = 0; prevCorners = null; progFill.style.width = '0';
+    return;
+  }
+
+  // stability: max corner displacement vs previous frame
+  let move = 0;
+  if (prevCorners){
+    for (let i=0;i<4;i++)
+      move = Math.max(move, Math.hypot(q.corners[i][0]-prevCorners[i][0], q.corners[i][1]-prevCorners[i][1]));
+  }
+  prevCorners = q.corners;
+  const diag = Math.hypot(pw, ph);
+  stableMs = (prevCorners && move < diag * 0.025) ? stableMs + dt : 0;
+
+  const need = tune.hold();
+  progFill.style.width = Math.min(100, stableMs/need*100) + '%';
+  setState('align', stableMs > 60 ? 'Hold still…' : 'Page found');
+
+  if (stableMs >= need) capture(vw, vh, now);
+}
+
+function drawOverlay(q, valid, pw, ph){
+  const dw = overlay.clientWidth, dh = overlay.clientHeight;
+  if (overlay.width !== dw){ overlay.width = dw; overlay.height = dh; }
+  const ctx = overlay.getContext('2d');
+  ctx.clearRect(0, 0, dw, dh);
+  if (!q) return;
+  // object-fit:cover mapping proc→display
+  const scale = Math.max(dw/pw, dh/ph);
+  const ox = (dw - pw*scale)/2, oy = (dh - ph*scale)/2;
+  ctx.beginPath();
+  q.corners.forEach(([x,y],i)=>{ const X = x*scale+ox, Y = y*scale+oy; i ? ctx.lineTo(X,Y) : ctx.moveTo(X,Y); });
+  ctx.closePath();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = valid ? 'rgba(242,179,61,.95)' : 'rgba(226,91,78,.6)';
+  ctx.stroke();
+}
+
+function capture(vw, vh, now){
+  capCanvas.width = vw; capCanvas.height = vh;
+  capCtx.drawImage(video, 0, 0);
+  // sharpness on 480-wide gray
+  const sw = 480, sh = Math.round(480*vh/vw);
+  proc.width = sw; proc.height = sh;
+  procCtx.drawImage(capCanvas, 0, 0, sw, sh);
+  const sharp = sharpness(toGray(procCtx.getImageData(0,0,sw,sh)), sw, sh);
+  if (sharp < tune.blur()){
+    toast('Blurry (' + Math.round(sharp) + ') — hold steadier');
+    stableMs = 0;
+    return;
+  }
+  const url = capCanvas.toDataURL('image/jpeg', 0.88);
+  captures.push({url, sharp: Math.round(sharp), t: new Date()});
+  renderThumbs();
+  chime();
+  if (navigator.vibrate) navigator.vibrate(80);
+  camwrap.classList.add('flash');
+  setTimeout(()=>camwrap.classList.remove('flash'), 350);
+  setState('locked', 'Captured — turn the page');
+  lastValidT = now;
+  stableMs = 0; prevCorners = null; progFill.style.width = '0';
+}
+
+function renderThumbs(){
+  $('capCount').textContent = '· ' + captures.length;
+  const box = $('thumbs'); box.innerHTML = '';
+  captures.slice().reverse().forEach((c)=>{
+    const div = document.createElement('div'); div.className = 'thumb';
+    div.innerHTML = `<img src="${c.url}"><div class="cap"><span>${c.t.toLocaleTimeString()}</span><b>♦ ${c.sharp}</b></div>`;
+    div.onclick = () => { loadImageURL(c.url); showTab('analyze'); };
+    box.appendChild(div);
+  });
+}
+
+/* ============ ANALYZE ============ */
+const srcCanvas = $('srcCanvas'), srcCtx = srcCanvas.getContext('2d', {willReadFrequently:true});
+const rectCanvas = $('rectCanvas'), rectCtx = rectCanvas.getContext('2d', {willReadFrequently:true});
+const gridCanvas = $('gridCanvas'), gridCtx = gridCanvas.getContext('2d');
+let srcImage = null;        // normalized working image (canvas)
+let corners = null;         // in srcCanvas pixel coords [tl,tr,br,bl]
+
+function setPreset(which){
+  const W = srcCanvas.width, H = srcCanvas.height;
+  // composition of a typical spread photo: pages span ~4–96% width, ~10–90% height
+  const yT = H*0.10, yB = H*0.90, xM = W*0.5;
+  let x0 = W*0.045, x1 = W*0.955;
+  if (W >= H){                       // landscape frame = full spread in view
+    if (which === 'left')  x1 = xM;
+    if (which === 'right') x0 = xM;
+  }
+  corners = [[x0,yT],[x1,yT],[x1,yB],[x0,yB]];
+  document.querySelectorAll('.pill[data-p]').forEach(b => b.classList.toggle('on', b.dataset.p === which));
+  drawCorners();
+}
+document.querySelectorAll('.pill[data-p]').forEach(b => b.onclick = () => setPreset(b.dataset.p));
+let rectImgData = null;     // rectified ImageData
+let cellData = [];          // raw grid cells: geometry + flags (masked, override, mergeRight)
+let slotData = [];          // derived slots: union rects + metrics, idx → owning cell
+const grid = { rows:3, cols:4 };
+let tapMode = 'fix';
+function setMode(m){
+  tapMode = m;
+  $('modeFix').classList.toggle('on', m === 'fix');
+  $('modeMask').classList.toggle('on', m === 'mask');
+  $('modeMerge').classList.toggle('on', m === 'merge');
+}
+$('modeFix').onclick = () => setMode('fix');
+$('modeMask').onclick = () => setMode('mask');
+$('modeMerge').onclick = () => setMode('merge');
+$('btnClearFix').onclick = () => { cellData.forEach(c => c.override = null); renderGrid(); };
+$('btnTpl').onclick = () => {
+  const tpl = {
+    rows: grid.rows, cols: grid.cols,
+    marginsPct: {top:+$('gMT').value, bottom:+$('gMB').value, left:+$('gML').value, right:+$('gMR').value},
+    gapPct: +$('gGap').value, thrC: +$('gThr').value, thrE: +$('gThrE').value,
+    maskedCells: cellData.map((c,i) => c.masked ? i : -1).filter(i => i >= 0),
+    mergedCells: cellData.map((c,i) => c.mergeRight ? i : -1).filter(i => i >= 0),
+  };
+  const json = JSON.stringify(tpl);
+  const showInPanel = () => {
+    $('metricsDump').textContent = json;
+    $('metricsDump').closest('details').open = true;
+    toast('Clipboard blocked — JSON is in the metrics panel');
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText)
+    navigator.clipboard.writeText(json).then(() => toast('Template copied'), showInPanel);
+  else showInPanel();
+};
+
+$('btnPick').onclick = () => $('filePick').click();
+$('filePick').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try{
+    const bmp = await createImageBitmap(f, {imageOrientation:'from-image'}).catch(()=>createImageBitmap(f));
+    setSourceImage(bmp);
+  }catch(_){
+    const img = new Image();
+    img.onload = () => setSourceImage(img);
+    img.src = URL.createObjectURL(f);
+  }
+};
+function loadImageURL(url){
+  const img = new Image();
+  img.onload = () => setSourceImage(img);
+  img.src = url;
+}
+
+const fitCanvas = document.createElement('canvas');
+const fitCtx = fitCanvas.getContext('2d');
+
+function setSourceImage(img){
+  // normalize once to a fixed working resolution — every downstream step
+  // (display, loupe, rectify) reads this, regardless of input megapixels
+  const iw = img.width || img.naturalWidth, ih = img.height || img.naturalHeight;
+  const sc = Math.min(1, 1600/Math.max(iw, ih));
+  fitCanvas.width = Math.round(iw*sc); fitCanvas.height = Math.round(ih*sc);
+  fitCtx.drawImage(img, 0, 0, fitCanvas.width, fitCanvas.height);
+  srcImage = fitCanvas;
+  srcCanvas.width = fitCanvas.width; srcCanvas.height = fitCanvas.height;
+  srcCtx.drawImage(fitCanvas, 0, 0);
+
+  // no auto-detect here: fixed rectangles matched to a typical spread photo
+  // beat quad detection on real backgrounds
+  setPreset(srcCanvas.width >= srcCanvas.height ? 'left' : 'spread');
+  $('cornerCard').style.display = 'block';
+  $('gridCard').style.display = 'none';
+  $('st1').classList.add('on'); $('st2').classList.add('on'); $('st3').classList.remove('on');
+  drawCorners();
+  $('cornerCard').scrollIntoView({behavior:'smooth'});
+}
+
+function drawCorners(){
+  const k = srcCanvas.width / srcCanvas.getBoundingClientRect().width;
+  srcCtx.drawImage(fitCanvas, 0, 0);
+  srcCtx.beginPath();
+  corners.forEach(([x,y],i)=> i ? srcCtx.lineTo(x,y) : srcCtx.moveTo(x,y));
+  srcCtx.closePath();
+  srcCtx.lineWidth = 2.5 * k;
+  srcCtx.strokeStyle = 'rgba(242,179,61,.95)';
+  srcCtx.stroke();
+  const r = 15 * k;
+  corners.forEach(([x,y])=>{
+    srcCtx.beginPath(); srcCtx.arc(x,y,r,0,7);
+    srcCtx.fillStyle = 'rgba(242,179,61,.25)'; srcCtx.fill();
+    srcCtx.lineWidth = 2.5 * k; srcCtx.strokeStyle = '#F2B33D'; srcCtx.stroke();
+  });
+}
+
+/* corner dragging (relative: handle keeps its offset from the finger) */
+let dragIdx = -1, dragOff = [0,0];
+function canvasPos(ev, canvas){
+  const r = canvas.getBoundingClientRect();
+  const p = ev.touches ? ev.touches[0] : ev;
+  return [(p.clientX - r.left) * canvas.width / r.width,
+          (p.clientY - r.top)  * canvas.height / r.height];
+}
+srcCanvas.addEventListener('pointerdown', ev => {
+  if (!corners) return;
+  const [x,y] = canvasPos(ev, srcCanvas);
+  let best = -1, bd = 1e9;
+  corners.forEach(([cx,cy],i)=>{ const d = Math.hypot(cx-x,cy-y); if (d<bd){bd=d;best=i;} });
+  if (bd < srcCanvas.width/6){
+    dragIdx = best;
+    dragOff = [corners[best][0]-x, corners[best][1]-y];
+    srcCanvas.setPointerCapture(ev.pointerId);
+    drawCorners(); drawLoupe(corners[best][0], corners[best][1]);
+  }
+});
+let rafPending = false, pendingPos = null;
+srcCanvas.addEventListener('pointermove', ev => {
+  if (dragIdx < 0) return;
+  ev.preventDefault();
+  pendingPos = canvasPos(ev, srcCanvas);
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    if (dragIdx < 0 || !pendingPos) return;
+    const [x,y] = pendingPos;
+    corners[dragIdx] = [Math.max(0,Math.min(srcCanvas.width,  x + dragOff[0])),
+                        Math.max(0,Math.min(srcCanvas.height, y + dragOff[1]))];
+    drawCorners();
+    drawLoupe(corners[dragIdx][0], corners[dragIdx][1]);
+  });
+});
+
+function drawLoupe(x, y){
+  // size everything in on-screen (CSS) pixels, then convert to canvas pixels
+  const k = srcCanvas.width / srcCanvas.getBoundingClientRect().width;
+  const R = 74 * k, zoom = 3;
+  const iw = srcImage.width || srcImage.naturalWidth, ih = srcImage.height || srcImage.naturalHeight;
+  const kx = iw/srcCanvas.width, ky = ih/srcCanvas.height;
+  let ly = y - 120 * k; if (ly < R) ly = y + 120 * k;
+  const lx = Math.max(R, Math.min(srcCanvas.width - R, x));
+  srcCtx.save();
+  srcCtx.beginPath(); srcCtx.arc(lx, ly, R, 0, 7); srcCtx.clip();
+  srcCtx.fillStyle = '#000'; srcCtx.fillRect(lx-R, ly-R, 2*R, 2*R);
+  srcCtx.drawImage(srcImage,
+    (x - R/zoom)*kx, (y - R/zoom)*ky, (2*R/zoom)*kx, (2*R/zoom)*ky,
+    lx-R, ly-R, 2*R, 2*R);
+  srcCtx.strokeStyle = '#F2B33D'; srcCtx.lineWidth = 2 * k;
+  srcCtx.beginPath();
+  srcCtx.moveTo(lx - 16*k, ly); srcCtx.lineTo(lx + 16*k, ly);
+  srcCtx.moveTo(lx, ly - 16*k); srcCtx.lineTo(lx, ly + 16*k);
+  srcCtx.stroke();
+  srcCtx.restore();
+  srcCtx.beginPath(); srcCtx.arc(lx, ly, R, 0, 7);
+  srcCtx.strokeStyle = '#F2B33D'; srcCtx.lineWidth = 3 * k; srcCtx.stroke();
+}
+srcCanvas.addEventListener('pointerup', () => { dragIdx = -1; if (corners) drawCorners(); });
+srcCanvas.style.touchAction = 'none';
+
+$('btnRectify').onclick = () => {
+  if (!corners) return;
+  const [tl,tr,br,bl] = corners;
+  const topL = Math.hypot(tr[0]-tl[0], tr[1]-tl[1]);
+  const botL = Math.hypot(br[0]-bl[0], br[1]-bl[1]);
+  const lftL = Math.hypot(bl[0]-tl[0], bl[1]-tl[1]);
+  const rgtL = Math.hypot(br[0]-tr[0], br[1]-tr[1]);
+  let W = (topL+botL)/2, H = (lftL+rgtL)/2;
+  if (W > H * 1.15)
+    toast('Looks like a whole spread — one page at a time keeps slots straight');
+  const sc = 1000/Math.max(W,H);
+  W = Math.round(W*sc); H = Math.round(H*sc);
+  const Hm = homographyDstToSrc(W, H, corners);
+  if (!Hm){ toast('Bad corner geometry'); return; }
+  const clean = fitCtx.getImageData(0, 0, fitCanvas.width, fitCanvas.height);
+  rectImgData = warp(clean, Hm, W, H);
+  rectCanvas.width = W; rectCanvas.height = H;
+  rectCtx.putImageData(rectImgData, 0, 0);
+  gridCanvas.width = W; gridCanvas.height = H;
+  $('gridCard').style.display = 'block';
+  $('st3').classList.add('on');
+  classify();
+  $('gridCard').scrollIntoView({behavior:'smooth'});
+};
+
+/* grid controls */
+document.querySelectorAll('.stepper button').forEach(b => b.onclick = () => {
+  const k = b.dataset.k, d = +b.dataset.d;
+  grid[k] = Math.max(1, Math.min(10, grid[k] + d));
+  $('vRows').textContent = grid.rows; $('vCols').textContent = grid.cols;
+  classify();
+});
+[['gMT','oMT','%'],['gMB','oMB','%'],['gML','oML','%'],['gMR','oMR','%'],['gGap','oGap','%'],['gThr','oThr',''],['gThrE','oThrE','']]
+.forEach(([s,o,u])=>{
+  $(s).addEventListener('input', ()=>{ $(o).textContent = $(s).value + u;
+    (s === 'gThr' || s === 'gThrE') ? applyThreshold() : classify(); });
+});
+
+function gridRects(){
+  const W = rectCanvas.width, H = rectCanvas.height;
+  const mt = $('gMT').value/100*H, mb = $('gMB').value/100*H;
+  const ml = $('gML').value/100*W, mr = $('gMR').value/100*W;
+  const gw = (W-ml-mr)/grid.cols, gh = (H-mt-mb)/grid.rows;
+  const gap = $('gGap').value/100;
+  const rects = [];
+  for (let r=0;r<grid.rows;r++) for (let c=0;c<grid.cols;c++){
+    const x0 = ml + c*gw + gw*gap/2, y0 = mt + r*gh + gh*gap/2;
+    rects.push({x0: Math.round(x0), y0: Math.round(y0),
+                x1: Math.round(x0 + gw*(1-gap)), y1: Math.round(y0 + gh*(1-gap))});
+  }
+  return rects;
+}
+
+function classify(){
+  if (!rectImgData) return;
+  const prev = cellData.map(c => ({masked:c.masked, override:c.override, mergeRight:c.mergeRight}));
+  cellData = gridRects().map(rc => ({...rc, masked:false, override:null, mergeRight:false}));
+  if (prev.length === cellData.length)
+    prev.forEach((p,i) => Object.assign(cellData[i], p));
+  // derive slots: a mergeRight cell absorbs its right neighbor into one slot
+  slotData = [];
+  const consumed = new Set();
+  cellData.forEach((c,i) => {
+    if (consumed.has(i)) return;
+    let rect = {x0:c.x0, y0:c.y0, x1:c.x1, y1:c.y1}, wide = false;
+    if (c.mergeRight && (i % grid.cols) < grid.cols - 1){
+      const r = cellData[i+1]; consumed.add(i+1); wide = true;
+      rect = {x0:c.x0, y0:Math.min(c.y0,r.y0), x1:r.x1, y1:Math.max(c.y1,r.y1)};
+    }
+    const ix = (rect.x1-rect.x0)*0.15, iy = (rect.y1-rect.y0)*0.15;
+    const m = cellMetrics(rectImgData, Math.round(rect.x0+ix), Math.round(rect.y0+iy),
+                                       Math.round(rect.x1-ix), Math.round(rect.y1-iy));
+    slotData.push({idx:i, wide, ...rect, ...m});
+  });
+  applyThreshold();
+}
+
+function applyThreshold(){
+  const thr = +$('gThr').value, thrE = +$('gThrE').value;
+  slotData.forEach(s => s.auto = s.C >= thr && s.E >= thrE);
+  renderGrid();
+}
+
+function renderGrid(){
+  const ctx = gridCtx;
+  ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+  let filled = 0, corr = 0, total = 0;
+  const dump = [];
+  slotData.forEach(s => {
+    const f = cellData[s.idx];
+    const tag = (s.wide ? '2× ' : '') + '#' + String(s.idx+1).padStart(2,'0');
+    if (f.masked){
+      ctx.fillStyle = 'rgba(0,0,0,.62)';
+      ctx.fillRect(s.x0, s.y0, s.x1-s.x0, s.y1-s.y0);
+      ctx.strokeStyle = 'rgba(147,160,172,.4)'; ctx.lineWidth = 2; ctx.setLineDash([3,5]);
+      ctx.strokeRect(s.x0, s.y0, s.x1-s.x0, s.y1-s.y0);
+      ctx.setLineDash([]);
+      ctx.font = '600 26px Barlow, sans-serif';
+      ctx.fillStyle = 'rgba(147,160,172,.7)';
+      ctx.fillText('—', (s.x0+s.x1)/2 - 8, (s.y0+s.y1)/2 + 8);
+      dump.push(`${tag}  masked (not a slot)`);
+      return;
+    }
+    total++;
+    const val = f.override !== null ? f.override : s.auto;
+    if (val) filled++;
+    if (f.override !== null && f.override !== s.auto) corr++;
+    ctx.lineWidth = 3;
+    if (val){
+      ctx.strokeStyle = '#33C46E';
+      ctx.fillStyle = 'rgba(51,196,110,.14)';
+      ctx.setLineDash([]);
+    } else {
+      ctx.strokeStyle = 'rgba(147,160,172,.85)';
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      ctx.setLineDash([7,5]);
+    }
+    ctx.fillRect(s.x0, s.y0, s.x1-s.x0, s.y1-s.y0);
+    ctx.strokeRect(s.x0, s.y0, s.x1-s.x0, s.y1-s.y0);
+    ctx.setLineDash([]);
+    // score chip: colorfulness · edge detail
+    ctx.font = '600 20px Barlow, sans-serif';
+    ctx.fillStyle = val ? '#33C46E' : '#93A0AC';
+    ctx.fillText((s.wide ? '2× ' : '') + Math.round(s.C) + '·' + Math.round(s.E), s.x0+6, s.y1-8);
+    if (f.override !== null){
+      ctx.fillStyle = '#C9A227';
+      ctx.font = '700 26px Barlow, sans-serif';
+      ctx.fillText('✎', s.x1-30, s.y0+30);
+    }
+    dump.push(`${tag}  C=${String(s.C).padStart(5)}  S=${String(s.S).padStart(3)}  E=${String(s.E).padStart(5)}  → ${val?'FILLED':'empty '}${f.override!==null?'  (manual)':''}`);
+  });
+  $('filledN').textContent = filled + ' / ' + total;
+  $('corrN').textContent = corr;
+  $('accN').textContent = total ? Math.round((1 - corr/total)*1000)/10 + '%' : '–';
+  $('metricsDump').textContent = dump.join('\n');
+}
+
+gridCanvas.addEventListener('pointerdown', ev => {
+  const [x,y] = canvasPos(ev, gridCanvas);
+  const s = slotData.find(s => x>=s.x0 && x<=s.x1 && y>=s.y0 && y<=s.y1);
+  if (!s) return;
+  const f = cellData[s.idx];
+  if (tapMode === 'merge'){
+    if (f.mergeRight){ f.mergeRight = false; }
+    else if ((s.idx % grid.cols) < grid.cols - 1){
+      f.mergeRight = true;
+      const r = cellData[s.idx+1];
+      r.masked = false; r.override = null; r.mergeRight = false;
+    } else { toast('No cell to the right to merge with'); return; }
+    classify();   // recompute metrics over the new slot region
+    return;
+  }
+  if (tapMode === 'mask'){ f.masked = !f.masked; renderGrid(); return; }
+  if (f.masked) return;
+  const cur = f.override !== null ? f.override : s.auto;
+  f.override = !cur;
+  renderGrid();
+});
+</script>
+</body>
+</html>

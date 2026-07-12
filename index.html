@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Swapini · FIFA World Cup 2026</title>
+<style>
+  :root{
+    --pitch:#0E3B2E; --pitch-deep:#092A21; --paper:#F6F1E4; --ink:#14201B;
+    --foil:#C9A227; --foil-hi:#E8C95A; --line:#2C5347; --muted:#8FAF9F;
+    --get:#2E7D52; --give:#B4552D;
+    --chip-h:46px; --radius:10px;
+    /* card height budget: viewport minus header, tab bar, group header, margins — split across 6 rows */
+    --card-h: clamp(62px, calc((100vh - 260px) / 6), 118px);
+    --card-w: calc(var(--card-h) * 0.75);
+  }
+  @supports (height:100dvh){
+    :root{ --card-h: clamp(62px, calc((100dvh - 260px) / 6), 118px); }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--pitch); color:var(--paper);
+    font-family:-apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+  button{font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer;}
+  button:focus-visible, input:focus-visible, textarea:focus-visible{outline:3px solid var(--foil-hi); outline-offset:2px;}
+
+  /* ---------- top bar ---------- */
+  header{position:sticky; top:0; z-index:30; background:var(--pitch-deep);
+    padding:10px 14px 8px; border-bottom:1px solid var(--line);}
+  .brand{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .brand h1{margin:0; font-size:20px; letter-spacing:.5px; font-weight:900; text-transform:uppercase;}
+  .brand h1 em{font-style:normal; color:var(--foil);}
+  .brand .album{font-size:12px; color:var(--muted);}
+  .progress{margin-top:8px; display:flex; align-items:center; gap:10px;}
+  .bar{flex:1; height:6px; border-radius:3px; background:var(--line); overflow:hidden;}
+  .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--foil),var(--foil-hi)); transition:width .25s;}
+  @media (prefers-reduced-motion:reduce){ .bar>i{transition:none;} }
+  .stat{font-variant-numeric:tabular-nums; font-size:13px; color:var(--paper); white-space:nowrap;}
+
+  /* ---------- sections & grids ---------- */
+  main{padding:0 10px;}
+  .hint{margin:12px 4px 4px; font-size:13px; color:var(--muted); line-height:1.45;}
+  .group-h{position:sticky; top:64px; z-index:20; margin:14px -10px 6px; padding:6px 14px;
+    display:flex; align-items:center; gap:10px; background:var(--pitch-deep); border-block:1px solid var(--line);}
+  .swatch{width:22px; height:22px; border-radius:6px; flex:none;}
+  .group-h b{font-size:15px; letter-spacing:.4px;}
+  .team{margin:10px 2px 16px;}
+  .team-h{display:flex; align-items:center; gap:8px; margin:0 2px 6px;}
+  .team-h .code{font-weight:800; font-size:13px; letter-spacing:.5px;}
+  .team-h .tname{font-size:13px; color:var(--muted); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mini{font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--paper);}
+  .mini:active{background:var(--line);}
+  .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  .grid.specials{grid-template-columns:repeat(5,1fr);}
+  .tgrid{display:grid; grid-template-columns:repeat(4, var(--card-w)); justify-content:center; gap:7px; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  .gflags{margin-left:auto; font-size:15px; letter-spacing:3px;}
+  .totop{margin-left:auto; flex:none; width:34px; height:30px; border:1px solid var(--line); border-radius:8px;
+    font-size:17px; line-height:1; color:var(--paper); display:flex; align-items:center; justify-content:center;}
+  .gflags + .totop{margin-left:8px;}
+  .totop:active{background:var(--line);}
+  .index{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .ixg{position:relative; border-radius:12px; padding:6px 44px 6px 6px; overflow:hidden;}
+  .ixg .big{position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:1px;}
+  .ixg .big b{font-size:32px; font-weight:900; opacity:.55; line-height:1;}
+  .ixg .big small{font-size:10px; font-weight:800; opacity:.85; font-variant-numeric:tabular-nums;}
+  .ixg button{display:flex; align-items:center; gap:7px; width:100%; padding:7px 4px; border-radius:8px;
+    font-size:13px; font-weight:700; text-align:left; color:inherit;}
+  .ixg button:active{background:rgba(0,0,0,.15);}
+  .ixg button .f{font-size:19px; line-height:1; flex:none;}
+  .ixg button .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;}
+  .ixg button .pr{flex:none; font-size:11px; font-weight:800; font-variant-numeric:tabular-nums; opacity:.85;}
+  .tlabel{grid-column:span 2; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; padding:2px 4px; min-width:0;}
+  .tlabel .flag{font-size:clamp(30px, calc(var(--card-h) * 0.44), 46px); line-height:1;}
+  .tlabel .tn{font-size:clamp(13px, calc(var(--card-h) * 0.16), 16px); color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; line-height:1.25;}
+  .tlabel .tn b{color:var(--paper); font-size:clamp(15px, calc(var(--card-h) * 0.18), 18px); letter-spacing:.5px; display:block;}
+  .tlabel .mini{font-size:11px; padding:3px 8px;}
+  .gbox{border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; font-weight:900;}
+  .gbox small{font-size:9px; letter-spacing:1.5px; font-weight:700;}
+  .gbox span{font-size:24px; line-height:1.1;}
+  .spine{grid-column:1/-1; border-top:1px dashed var(--line); margin:3px 6px;}
+
+  /* ---------- chips: the sticker slots ---------- */
+  .chip{position:relative; aspect-ratio:3/4; border-radius:var(--radius);
+    display:flex; flex-direction:column; align-items:stretch; padding:0;
+    border:2px dashed var(--line); color:var(--muted); background:transparent; overflow:hidden;}
+  .chip .face{flex:1; min-height:0; width:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:2px; color:inherit;}
+  .chip .cc{font-size:clamp(10px, calc(var(--card-h) * 0.15), 13px); font-weight:800; letter-spacing:1px; opacity:.9; line-height:1;}
+  .chip .nn{font-weight:900; font-size:clamp(16px, calc(var(--card-h) * 0.27), 27px); font-variant-numeric:tabular-nums; line-height:1;}
+  .chip.wide{grid-column:span 2; aspect-ratio:auto;}
+  .chip.have{border:2px solid transparent; color:var(--chip-ink,#fff); background:var(--chip-bg,var(--foil));}
+  .chip.have::after{content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(115deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 38%);}
+  .chip.foil.have{background:linear-gradient(135deg,var(--foil) 0%,var(--foil-hi) 55%,var(--foil) 100%); color:#3A2E05;}
+  .chip .dstrip{display:none; flex:none; width:100%; position:relative; z-index:1;
+    height:clamp(24px, calc(var(--card-h) * 0.3), 34px);
+    background:rgba(0,0,0,.18); border-top:1px solid rgba(0,0,0,.22);}
+  .chip.have .dstrip{display:flex;}
+  .dstrip button{flex:1; min-width:0; display:flex; align-items:center; justify-content:center;
+    font-weight:900; color:inherit; font-size:clamp(14px, calc(var(--card-h) * 0.18), 18px);
+    font-variant-numeric:tabular-nums;}
+  .dstrip button + button{border-left:1px solid rgba(0,0,0,.22);}
+  .dstrip button:active{background:rgba(0,0,0,.22);}
+  .dstrip .dm[aria-disabled="true"]{opacity:.3;}
+  .chip.hlv{outline:3px solid #38C972; outline-offset:2px;}
+  .chip.hlm{outline:3px solid #FF5A4E; outline-offset:2px;}
+  .painting .chip{transition:none;}
+
+  /* ---------- dupes list & quick entry ---------- */
+  .qentry input{font-family:ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:.5px;}
+  .qlog{margin-top:8px; font-size:13px; line-height:1.7; font-variant-numeric:tabular-nums;}
+  .qlog .lok{color:#9CD3A8;} .qlog .lrm{color:#F0B48F;} .qlog .lbad{color:#F0A088;} .qlog .lnf{color:var(--muted);}
+  .drow{display:flex; gap:10px; padding:10px 4px; border-bottom:1px solid var(--line); align-items:baseline;}
+  .drow .dcode{flex:none; width:86px; font-weight:800; font-size:15px; letter-spacing:.5px;}
+  .drow .dcode .f{font-size:18px; margin-right:5px;}
+  .drow .dtoks{flex:1; line-height:2;}
+  .dtok{display:inline-block; background:var(--pitch-deep); border:1px solid var(--line);
+    padding:2px 9px; border-radius:999px; margin:0 6px 4px 0; font-weight:700; font-size:14px;
+    font-variant-numeric:tabular-nums;}
+
+  /* ---------- dupes ---------- */
+  .paste{margin:10px 2px; display:flex; flex-direction:column; gap:8px;}
+  textarea, input[type=text]{width:100%; background:var(--pitch-deep); color:var(--paper);
+    border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px; font-size:15px;}
+  textarea{min-height:64px; resize:vertical;}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    background:var(--foil); color:#2B2104; font-weight:800; font-size:15px;
+    border-radius:var(--radius); padding:12px 16px;}
+  .btn:active{background:var(--foil-hi);}
+  .btn.ghost{background:transparent; color:var(--paper); border:1px solid var(--line); font-weight:600;}
+  .err{color:#F0A088; font-size:13px;}
+  .ok{color:#9CD3A8; font-size:13px;}
+
+  /* ---------- swap ---------- */
+  .card{background:var(--pitch-deep); border:1px solid var(--line); border-radius:14px; padding:14px; margin:12px 2px;}
+  .card h2{margin:0 0 8px; font-size:15px; text-transform:uppercase; letter-spacing:.6px; color:var(--foil);}
+  details.fold{margin-top:12px; scroll-margin-top:96px;}
+  details.fold summary{list-style:none; display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; font-size:15px; text-transform:uppercase; letter-spacing:.6px; color:var(--foil); font-weight:700;}
+  details.fold summary::-webkit-details-marker{display:none;}
+  details.fold summary::after{content:"▾"; font-size:14px; transition:transform .2s;}
+  details.fold:not([open]) summary::after{transform:rotate(-90deg);}
+  details.fold[open] summary{margin-bottom:8px;}
+  @media (prefers-reduced-motion:reduce){ details.fold summary::after{transition:none;} }
+  .team{scroll-margin-top:142px;}
+  .helpbtn{margin-left:auto; width:32px; height:32px; border-radius:50%;
+    border:1px solid var(--line); font-weight:800; font-size:15px; color:var(--paper);
+    display:flex; align-items:center; justify-content:center;}
+  .helpbtn:active{background:var(--line);}
+  .field{margin:8px 0;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px;}
+  .match{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .col{border-radius:12px; padding:10px; border:1px solid var(--line);}
+  .col h3{margin:0 0 2px; font-size:13px; text-transform:uppercase; letter-spacing:.5px;}
+  .col .total{font-size:26px; font-weight:900; font-variant-numeric:tabular-nums; margin-bottom:6px;}
+  .col.get h3, .col.get .total{color:#9CD3A8;}
+  .col.give h3, .col.give .total{color:#F0B48F;}
+  .col ul{list-style:none; margin:0; padding:0; font-size:14px; line-height:1.7;}
+  .col li b{font-variant-numeric:tabular-nums;}
+  .banner{font-size:14px; color:var(--paper); margin-bottom:8px;}
+  .banner .x{color:var(--muted); font-size:13px;}
+  .rowbtns{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+
+  /* ---------- tabs ---------- */
+  nav{position:fixed; bottom:0; left:0; right:0; z-index:40; display:flex;
+    background:var(--pitch-deep); border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom);}
+  nav button{flex:1; padding:12px 0 10px; font-size:13px; font-weight:700; color:var(--muted);
+    display:flex; flex-direction:column; align-items:center; gap:2px;}
+  nav button .big{font-size:17px; line-height:1;}
+  nav button[aria-selected=true]{color:var(--foil-hi);}
+  nav button[aria-selected=true]::after{content:""; width:26px; height:3px; border-radius:2px; background:var(--foil); margin-top:3px;}
+
+  .screen{display:none;} .screen.active{display:block;}
+  .toast{position:fixed; left:50%; bottom:84px; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:999px;
+    font-size:14px; z-index:50; opacity:0; pointer-events:none; transition:opacity .2s;}
+  .toast.show{opacity:1;}
+  .danger{color:#F0A088; font-size:13px; text-decoration:underline; margin:20px auto 8px; display:block; text-align:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button></div>
+  <div class="progress"><div class="bar"><i id="barfill"></i></div><span class="stat" id="topstat">0 / 980</span></div>
+</header>
+
+<main>
+  <!-- ALBUM -->
+  <section id="scr-album" class="screen active">
+    <details class="card fold" id="howto" open>
+      <summary>How it works</summary>
+      <p class="hint" style="margin:0 0 6px">
+        <b>1 · Album</b> — open your book and mark what you own. Tap a slot, or <b>hold and drag</b> to paint a run. Own most of a team? Tap only the ones you're <i>missing</i>, then hit <b>⇄ Invert all 20</b> to flip the whole team. The layout mirrors each album spread, so match the pattern, not the numbers.</p>
+      <p class="hint" style="margin:0 0 6px">
+        <b>2 · Dupes</b> — once a card is owned, a <b>− 0 +</b> strip appears on it: mark spare copies right there. The Dupes tab lists them A→Z and has a fast keyboard entry mode.</p>
+      <p class="hint" style="margin:0">
+        <b>3 · Swap</b> — copy your link and send it on WhatsApp. Paste a friend's link to instantly see who gives what.</p>
+    </details>
+    <details class="card fold" id="teamix" open>
+      <summary>Team index</summary>
+      <div class="index" id="indexgrid"></div>
+    </details>
+    <details class="card fold" id="qafold">
+      <summary>Quick entry (keyboard)</summary>
+      <p class="hint" style="margin:0 0 6px">Same syntax, but here it marks <b>cards</b>, not spares. Press <b>a</b>, <b>f</b>, <b>r</b> or <b>i</b> anywhere to start typing. Space between stickers, double space to finish. <b>×N</b> in add mode means N copies — the first fills the album, the rest become spares.</p>
+      <p class="hint" style="margin:0; font-family:ui-monospace,Menlo,monospace; font-size:12.5px; line-height:1.9">
+        atpor5 4 6x2␣␣ &nbsp;→ add POR 5, 4, and 6 with one spare<br>
+        apor5 bel2 alg8␣␣ &nbsp;→ add POR 5, BEL 2, ALG 8<br>
+        ftpor5 6 8␣␣ &nbsp;→ jump to Portugal, outline 5, 6, 8 — green owned, red missing<br>
+        itpor␣␣ &nbsp;→ invert all 20 of Portugal</p>
+      <input type="text" id="qalbum" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="apor5 bel2␣␣ · ftpor5 6 8␣␣ · itpor␣␣">
+      <div class="qlog" id="qloga"></div>
+    </details>
+    <div id="album"></div>
+    <button class="danger" id="reset">Reset everything</button>
+  </section>
+
+  <!-- DUPES -->
+  <section id="scr-dupes" class="screen">
+    <details class="card fold" id="howto-d" open>
+      <summary>How it works</summary>
+      <p class="hint" style="margin:0 0 6px">Mark duplicates on the <b>Album</b> tab: every owned card shows a <b>− 0 +</b> strip. <b>+</b> adds a spare, <b>−</b> removes one, tapping the <b>number</b> clears back to zero. This tab lists your spares by team code, A→Z — the order you'd check against a friend's stack.</p>
+      <p class="hint" style="margin:0 0 6px"><b>Quick entry</b> is for typing with a keyboard. Start with a mode letter, separate stickers with a <b>space</b>, finish with a <b>double space</b>:</p>
+      <p class="hint" style="margin:0 0 6px">
+        <b>a</b> add &nbsp;·&nbsp; <b>f</b> find &nbsp;·&nbsp; <b>r</b> remove &nbsp;·&nbsp; add <b>t</b> for team mode</p>
+      <p class="hint" style="margin:0; font-family:ui-monospace,Menlo,monospace; font-size:12.5px; line-height:1.9">
+        apor5x2␣␣ &nbsp;→ add POR 5, 2 spares<br>
+        fpor5␣␣ &nbsp;→ find POR 5 — owned? spares?<br>
+        atpor5x2 6x4 20 15x2␣␣ &nbsp;→ team mode: POR 5×2, 6×4, 20×1, 15×2<br>
+        rpor5 6x2␣␣ &nbsp;→ remove one POR 5 and two POR 6</p>
+    </details>
+    <div class="card qentry">
+      <h2>Quick entry</h2>
+      <input type="text" id="qinput" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="apor5x2␣␣ · fpor5␣␣ · rpor5 6x2␣␣">
+      <div class="qlog" id="qlog"></div>
+    </div>
+    <div id="dupes"></div>
+  </section>
+
+  <!-- SWAP -->
+  <section id="scr-swap" class="screen">
+    <div class="card" id="sharecard">
+      <h2>Share your list</h2>
+      <div class="field"><label for="myname">Your name (optional)</label><input type="text" id="myname" maxlength="30"></div>
+      <div class="field"><label for="myextras">Extras note — parallels, oddities (optional)</label><input type="text" id="myextras" maxlength="200" placeholder="e.g. 2 blue-border Mbappé, 1 CC4"></div>
+      <div class="rowbtns">
+        <button class="btn" id="copylink">Copy swap link</button>
+        <button class="btn ghost" id="copycode">Copy code only</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Compare with a friend</h2>
+      <div class="field"><label for="theirbox">Paste their link or code</label><textarea id="theirbox"></textarea></div>
+      <button class="btn" id="comparebtn">Show the match</button>
+      <div id="comparemsg"></div>
+    </div>
+    <div id="matchwrap"></div>
+  </section>
+</main>
+
+<nav role="tablist">
+  <button role="tab" aria-selected="true" data-tab="album"><span class="big">▦</span>Album</button>
+  <button role="tab" aria-selected="false" data-tab="dupes"><span class="big">×2</span>Dupes</button>
+  <button role="tab" aria-selected="false" data-tab="swap"><span class="big">⇄</span>Swap</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= album config (M0, locked) ================= */
+const CONFIG = {
+  albumId:"fwc2026", v:1,
+  specials:[
+    ["00","Panini Logo"],["FWC1","Emblem 1/2"],["FWC2","Emblem 2/2"],["FWC3","Mascots"],
+    ["FWC4","Slogan"],["FWC5","Ball"],["FWC6","Host: Canada"],["FWC7","Host: Mexico"],
+    ["FWC8","Host: USA"],["FWC9","History"],["FWC10","History"],["FWC11","History"],
+    ["FWC12","History"],["FWC13","History"],["FWC14","History"],["FWC15","History"],
+    ["FWC16","History"],["FWC17","History"],["FWC18","History"],["FWC19","History"]
+  ],
+  groups:[
+    ["A","#7CB342",[["MEX","Mexico"],["RSA","South Africa"],["KOR","Korea Republic"],["CZE","Czechia"]]],
+    ["B","#E53935",[["CAN","Canada"],["BIH","Bosnia-Herzegovina"],["QAT","Qatar"],["SUI","Switzerland"]]],
+    ["C","#EEE84C",[["BRA","Brazil"],["MAR","Morocco"],["HAI","Haiti"],["SCO","Scotland"]]],
+    ["D","#3949AB",[["USA","USA"],["PAR","Paraguay"],["AUS","Australia"],["TUR","Türkiye"]]],
+    ["E","#F4511E",[["GER","Germany"],["CUW","Curaçao"],["CIV","Côte d'Ivoire"],["ECU","Ecuador"]]],
+    ["F","#1E5E4A",[["NED","Netherlands"],["JPN","Japan"],["SWE","Sweden"],["TUN","Tunisia"]]],
+    ["G","#B39DDB",[["BEL","Belgium"],["EGY","Egypt"],["IRN","IR Iran"],["NZL","New Zealand"]]],
+    ["H","#4DB6AC",[["ESP","Spain"],["CPV","Cabo Verde"],["KSA","Saudi Arabia"],["URU","Uruguay"]]],
+    ["I","#5E35B1",[["FRA","France"],["SEN","Senegal"],["IRQ","Iraq"],["NOR","Norway"]]],
+    ["J","#F8A5A0",[["ARG","Argentina"],["ALG","Algeria"],["AUT","Austria"],["JOR","Jordan"]]],
+    ["K","#E91E63",[["POR","Portugal"],["COD","Congo DR"],["UZB","Uzbekistan"],["COL","Colombia"]]],
+    ["L","#7B2B35",[["ENG","England"],["CRO","Croatia"],["GHA","Ghana"],["PAN","Panama"]]]
+  ],
+  perTeam:20
+};
+
+/* Flat index map: specials 0..19, then teams in order, 20 each. */
+const STICKERS = [];            // {id, code, num, group, color, foil, teamName}
+const ID2IDX = new Map();
+(function build(){
+  CONFIG.specials.forEach(function(s){
+    var st = {id:s[0], code:s[0]==="00"?"00":"FWC", num:s[0]==="00"?0:parseInt(s[0].slice(3),10),
+              group:"SPECIAL", color:"#C9A227", foil:true, teamName:s[1]};
+    ID2IDX.set(s[0], STICKERS.length); STICKERS.push(st);
+  });
+  CONFIG.groups.forEach(function(g){
+    g[2].forEach(function(t){
+      for(var n=1;n<=CONFIG.perTeam;n++){
+        var id=t[0]+n;
+        ID2IDX.set(id, STICKERS.length);
+        STICKERS.push({id:id, code:t[0], num:n, group:g[0], color:g[1], foil:(n===1), teamName:t[1]});
+      }
+    });
+  });
+})();
+const TOTAL = STICKERS.length;   // 980
+const CODE_ALIASES = {"EGV":"EGY"}; // album font quirk
+const FLAGS = {
+  MEX:"🇲🇽", RSA:"🇿🇦", KOR:"🇰🇷", CZE:"🇨🇿",
+  CAN:"🇨🇦", BIH:"🇧🇦", QAT:"🇶🇦", SUI:"🇨🇭",
+  BRA:"🇧🇷", MAR:"🇲🇦", HAI:"🇭🇹", SCO:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  USA:"🇺🇸", PAR:"🇵🇾", AUS:"🇦🇺", TUR:"🇹🇷",
+  GER:"🇩🇪", CUW:"🇨🇼", CIV:"🇨🇮", ECU:"🇪🇨",
+  NED:"🇳🇱", JPN:"🇯🇵", SWE:"🇸🇪", TUN:"🇹🇳",
+  BEL:"🇧🇪", EGY:"🇪🇬", IRN:"🇮🇷", NZL:"🇳🇿",
+  ESP:"🇪🇸", CPV:"🇨🇻", KSA:"🇸🇦", URU:"🇺🇾",
+  FRA:"🇫🇷", SEN:"🇸🇳", IRQ:"🇮🇶", NOR:"🇳🇴",
+  ARG:"🇦🇷", ALG:"🇩🇿", AUT:"🇦🇹", JOR:"🇯🇴",
+  POR:"🇵🇹", COD:"🇨🇩", UZB:"🇺🇿", COL:"🇨🇴",
+  ENG:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", CRO:"🇭🇷", GHA:"🇬🇭", PAN:"🇵🇦"
+};
+
+/* ================= state & persistence ================= */
+const KEY = "stickerswap:fwc2026";
+let state = { have:new Set(), dupes:new Map(), name:"", extras:"" };
+let saveTimer = null;
+
+function serialize(){
+  return JSON.stringify({ h:Array.from(state.have), d:Array.from(state.dupes), n:state.name, x:state.extras, o:state.helpOpen!==false, i:state.ixOpen!==false, od:state.helpDOpen!==false, qa:state.qaOpen===true });
+}
+function hydrate(json){
+  try{
+    var o = JSON.parse(json);
+    state.have = new Set(o.h||[]); state.dupes = new Map(o.d||[]);
+    state.name = o.n||""; state.extras = o.x||"";
+    state.helpOpen = o.o!==false;
+    state.ixOpen = o.i!==false;
+    state.helpDOpen = o.od!==false;
+    state.qaOpen = o.qa===true;
+  }catch(e){}
+}
+function writeState(){
+  var s = serialize();
+  try{ if(window.storage) window.storage.set(KEY, s).catch(function(){}); }catch(e){}
+  try{ localStorage.setItem(KEY, s); }catch(e){}
+}
+function persist(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(writeState, 300);
+}
+function persistNow(){ clearTimeout(saveTimer); writeState(); }
+async function restore(){
+  try{ if(window.storage){ var r = await window.storage.get(KEY); if(r && r.value){ hydrate(r.value); return; } } }catch(e){}
+  try{ var s = localStorage.getItem(KEY); if(s) hydrate(s); }catch(e){}
+}
+
+/* ================= encoding: URL hash payload ================= */
+function b64uEncode(bytes){
+  var bin=""; bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function b64uDecode(str){
+  str = str.replace(/-/g,"+").replace(/_/g,"/");
+  while(str.length % 4) str += "=";
+  var bin = atob(str), out = new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function encodeHave(){
+  var bytes = new Uint8Array(Math.ceil(TOTAL/8));
+  state.have.forEach(function(i){ bytes[i>>3] |= (1 << (i&7)); });
+  return b64uEncode(bytes);
+}
+function decodeHave(str){
+  var bytes = b64uDecode(str), set = new Set();
+  for(var i=0;i<TOTAL;i++) if(bytes[i>>3] & (1<<(i&7))) set.add(i);
+  return set;
+}
+function dupesToShorthand(map){
+  var parts=[];
+  Array.from(map.entries()).sort(function(a,b){return a[0]-b[0];}).forEach(function(e){
+    var s = STICKERS[e[0]]; parts.push(s.id + (e[1]>1 ? "x"+e[1] : ""));
+  });
+  return parts.join(",");
+}
+function buildPayload(){
+  var p = new URLSearchParams();
+  p.set("a", CONFIG.albumId); p.set("v", String(CONFIG.v));
+  if(state.name) p.set("n", state.name);
+  p.set("h", encodeHave());
+  var d = dupesToShorthand(state.dupes); if(d) p.set("d", d);
+  if(state.extras) p.set("x", state.extras);
+  return p.toString();
+}
+function parsePayload(text){
+  text = (text||"").trim();
+  var hashIdx = text.indexOf("#");
+  if(hashIdx >= 0) text = text.slice(hashIdx+1);
+  if(!/(^|&)h=/.test(text)) return {err:"No sticker data found. Paste the whole link or the whole code."};
+  var p;
+  try{ p = new URLSearchParams(text); }catch(e){ return {err:"Couldn't read that. Paste the whole link or code."}; }
+  if(p.get("a") !== CONFIG.albumId) return {err:"That code is for a different album."};
+  if(p.get("v") !== String(CONFIG.v)) return {err:"That code uses a different version. Ask your friend to re-copy their link."};
+  var out = { name:p.get("n")||"", extras:p.get("x")||"", have:null, dupes:new Map() };
+  try{ out.have = decodeHave(p.get("h")); }catch(e){ return {err:"The sticker data in that code is damaged. Ask for a fresh link."}; }
+  var d = p.get("d");
+  if(d){
+    var parsed = parseShorthand(d);
+    parsed.entries.forEach(function(e){ out.dupes.set(e[0], e[1]); });
+  }
+  return out;
+}
+
+/* ================= shorthand parser (MEX7, SEN2x2, COL4-9, FWC3, 00) ================= */
+function parseShorthand(text){
+  var entries=[], bad=[], lastCode=null;
+  var tokens = (text||"").split(/[\s,;\n]+/).filter(Boolean);
+  tokens.forEach(function(tok){
+    var t = tok.toUpperCase().replace(/\s+/g,"");
+    var m = t.match(/^([A-Z]{2,3})?\s*(\d+)(?:-(\d+))?(?:X(\d+))?$/);
+    if(t==="00"){ entries.push([ID2IDX.get("00"),1]); lastCode="00"; return; }
+    if(!m){ bad.push(tok); return; }
+    var code = m[1] || lastCode;
+    if(code && CODE_ALIASES[code]) code = CODE_ALIASES[code];
+    if(!code){ bad.push(tok); return; }
+    if(code!=="00" && !ID2IDX.has(code+"1") && code!=="FWC"){ bad.push(tok); return; }
+    lastCode = code;
+    var from = parseInt(m[2],10), to = m[3]?parseInt(m[3],10):from, count = m[4]?parseInt(m[4],10):1;
+    if(to < from || count < 1 || count > 9){ bad.push(tok); return; }
+    for(var n=from;n<=to;n++){
+      var idx = ID2IDX.get(code + n);
+      if(idx === undefined){ bad.push(code + n); continue; }
+      entries.push([idx, Math.min(count,9)]);
+    }
+  });
+  return {entries:entries, bad:bad};
+}
+
+/* ================= rendering ================= */
+function inkFor(hex){
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return (0.299*r + 0.587*g + 0.114*b) > 165 ? "#20241B" : "#FFFFFF";
+}
+function chipHTML(s){
+  var idx = ID2IDX.get(s.id);
+  var have = state.have.has(idx);
+  var cnt = state.dupes.get(idx) || 0;
+  var isPhoto = (s.group!=="SPECIAL" && s.num===13);
+  var cls = "chip" + (have?" have":"") + (s.foil?" foil":"") + (isPhoto?" wide":"");
+  var style = (have && !s.foil) ? ' style="--chip-bg:'+s.color+';--chip-ink:'+inkFor(s.color)+'"' : "";
+  var cc, nn;
+  if(s.id==="00"){ cc="PANINI"; nn="00"; }
+  else if(s.group==="SPECIAL"){ cc="FWC"; nn=s.num; }
+  else { cc=s.code; nn=s.num; }
+  return '<div class="'+cls+'"'+style+' data-i="'+idx+'">'+
+         '<button class="face" aria-pressed="'+have+'" aria-label="'+s.id+'">'+
+         '<span class="cc">'+cc+'</span><span class="nn">'+nn+'</span></button>'+
+         '<div class="dstrip">'+
+           '<button class="dm" data-dm aria-label="Remove one spare of '+s.id+'" aria-disabled="'+(cnt===0)+'">−</button>'+
+           '<button class="dz" data-dz aria-label="Spares of '+s.id+', tap to clear">'+cnt+'</button>'+
+           '<button class="dp" data-dp aria-label="Add a spare of '+s.id+'">+</button>'+
+         '</div></div>';
+}
+function renderAlbum(){
+  var html = "";
+  html += '<div class="group-h"><span class="swatch" style="background:var(--foil)"></span><b>Intro &amp; Specials</b><button class="totop" aria-label="Back to top">⤒</button></div>';
+  html += '<div class="team"><div class="grid specials" data-paint="1">';
+  STICKERS.slice(0,20).forEach(function(s){ html += chipHTML(s); });
+  html += '</div></div>';
+  CONFIG.groups.forEach(function(g){
+    var gflags = g[2].map(function(t){ return FLAGS[t[0]]||""; }).join(" ");
+    html += '<div class="group-h"><span class="swatch" style="background:'+g[1]+'"></span><b>Group '+g[0]+'</b><span class="gflags">'+gflags+'</span><button class="totop" aria-label="Back to top">⤒</button></div>';
+    g[2].forEach(function(t){
+      var c = function(n){ return chipHTML(STICKERS[ID2IDX.get(t[0]+n)]); };
+      html += '<div class="team" id="t-'+t[0]+'"><div class="tgrid" data-paint="1">';
+      /* left page: header cell + badge + 2, then 3-6, 7-10 */
+      html += '<div class="tlabel"><span class="flag">'+(FLAGS[t[0]]||"")+'</span>'+
+              '<span class="tn"><b>'+t[0]+'</b> '+t[1]+'</span>'+
+              '<button class="mini" data-ownall="'+t[0]+'">⇄ Invert all 20</button></div>';
+      html += c(1)+c(2);
+      for(var n=3;n<=10;n++) html += c(n);
+      /* page turn */
+      html += '<div class="spine"></div>';
+      /* right page: 11, 12, wide team photo 13, then 14-17, group box + 18-20 */
+      html += c(11)+c(12)+c(13);
+      for(n=14;n<=17;n++) html += c(n);
+      html += '<div class="gbox" style="background:'+g[1]+';color:'+inkFor(g[1])+'"><small>GROUP</small><span>'+g[0]+'</span></div>';
+      html += c(18)+c(19)+c(20);
+      html += '</div></div>';
+    });
+  });
+  document.getElementById("album").innerHTML = html;
+}
+function updateCounters(){
+  var n = state.have.size;
+  document.getElementById("topstat").textContent = n + " / " + TOTAL;
+  document.getElementById("barfill").style.width = (100*n/TOTAL).toFixed(1) + "%";
+  if(typeof updateIndexCounts === "function" && document.getElementById("indexgrid").children.length) updateIndexCounts();
+}
+document.addEventListener("click", function(e){
+  if(e.target.closest(".totop")){
+    var smooth = !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    window.scrollTo({top:0, behavior: smooth ? "smooth" : "auto"});
+  }
+});
+function refreshChip(idx){
+  var el = document.querySelector('#scr-album [data-i="'+idx+'"]');
+  if(!el) return;
+  var s = STICKERS[idx], have = state.have.has(idx), cnt = state.dupes.get(idx)||0;
+  el.classList.toggle("have", have);
+  el.querySelector(".face").setAttribute("aria-pressed", have);
+  if(!s.foil && have){
+    el.style.setProperty("--chip-bg", s.color); el.style.setProperty("--chip-ink", inkFor(s.color));
+  }
+  el.querySelector(".dz").textContent = cnt;
+  el.querySelector(".dm").setAttribute("aria-disabled", cnt===0);
+}
+
+/* ================= interactions ================= */
+function setHave(idx, val){
+  if(val) state.have.add(idx);
+  else { state.have.delete(idx); state.dupes.delete(idx); }
+  refreshChip(idx); updateCounters(); persist();
+}
+function toggleHave(idx){ setHave(idx, !state.have.has(idx)); }
+function setDupe(idx, count){
+  count = Math.max(0, Math.min(9, count));
+  if(count > 0 && !state.have.has(idx)) state.have.add(idx);
+  if(count === 0) state.dupes.delete(idx); else state.dupes.set(idx, count);
+  refreshChip(idx); updateCounters(); persist();
+  return count;
+}
+
+/* tap + long-press paint on the album card faces; dupe strip buttons */
+(function(){
+  var albumEl = document.getElementById("scr-album");
+  var timer=null, painting=false, paintVal=null, startXY=null, startIdx=null, moved=false;
+  function chipAt(x,y){ var el=document.elementFromPoint(x,y); return el && el.closest ? el.closest("[data-i]") : null; }
+  function blockScroll(e){ e.preventDefault(); }
+  function endPaint(){
+    clearTimeout(timer); timer=null;
+    if(painting){ document.removeEventListener("touchmove", blockScroll); document.body.classList.remove("painting"); }
+    painting=false; paintVal=null; startIdx=null; startXY=null; moved=false;
+  }
+  albumEl.addEventListener("contextmenu", function(e){ if(e.target.closest("[data-i]")) e.preventDefault(); });
+  albumEl.addEventListener("pointerdown", function(e){
+    var face = e.target.closest(".face"); if(!face) return;
+    var chip = face.closest("[data-i]"); if(!chip) return;
+    startIdx = +chip.dataset.i; startXY=[e.clientX,e.clientY]; moved=false;
+    timer = setTimeout(function(){
+      painting = true; paintVal = !state.have.has(startIdx);
+      setHave(startIdx, paintVal);
+      document.addEventListener("touchmove", blockScroll, {passive:false});
+      document.body.classList.add("painting");
+      if(navigator.vibrate) navigator.vibrate(10);
+    }, 300);
+  });
+  albumEl.addEventListener("pointermove", function(e){
+    if(startXY && !painting){
+      if(Math.abs(e.clientX-startXY[0])+Math.abs(e.clientY-startXY[1]) > 10){ moved=true; clearTimeout(timer); }
+    }
+    if(painting){
+      var chip = chipAt(e.clientX, e.clientY);
+      if(chip){ var i=+chip.dataset.i; if(state.have.has(i)!==paintVal) setHave(i,paintVal); }
+    }
+  });
+  albumEl.addEventListener("pointerup", function(e){
+    var wasPainting = painting, idx = startIdx, didMove = moved;
+    endPaint();
+    if(!wasPainting && idx!==null && !didMove){
+      var face = e.target.closest(".face");
+      var chip = face && face.closest("[data-i]");
+      if(chip && +chip.dataset.i===idx) toggleHave(idx);
+    }
+    startIdx=null;
+  });
+  albumEl.addEventListener("pointercancel", endPaint);
+  albumEl.addEventListener("click", function(e){
+    var own = e.target.closest("[data-ownall]");
+    if(own){
+      var code = own.dataset.ownall;
+      for(var n=1;n<=CONFIG.perTeam;n++){ var i=ID2IDX.get(code+n); setHave(i, !state.have.has(i)); }
+      return;
+    }
+    var chip = e.target.closest("[data-i]");
+    if(!chip) return;
+    var idx = +chip.dataset.i, cnt = state.dupes.get(idx)||0;
+    if(e.target.closest("[data-dp]")) setDupe(idx, cnt+1);
+    else if(e.target.closest("[data-dm]")){ if(cnt>0) setDupe(idx, cnt-1); }
+    else if(e.target.closest("[data-dz]")) setDupe(idx, 0);
+  });
+})();
+
+function renderDupes(){
+  var byCode = {};
+  state.dupes.forEach(function(c,i){
+    var s = STICKERS[i], key = (s.id==="00") ? "00" : s.code;
+    (byCode[key] = byCode[key]||[]).push([s.num, c]);
+  });
+  var codes = Object.keys(byCode).sort();
+  if(!codes.length){
+    document.getElementById("dupes").innerHTML =
+      '<p class="hint">No spares yet — mark them on owned cards in the Album, or use Quick entry above.</p>';
+    return;
+  }
+  var html = "";
+  codes.forEach(function(code){
+    var toks = byCode[code].sort(function(a,b){return a[0]-b[0];}).map(function(t){
+      return '<span class="dtok">'+t[0]+(t[1]>1?"×"+t[1]:"")+'</span>';
+    }).join("");
+    var flag = FLAGS[code] ? '<span class="f">'+FLAGS[code]+'</span>' : "";
+    html += '<div class="drow"><span class="dcode">'+flag+code+'</span><span class="dtoks">'+toks+'</span></div>';
+  });
+  document.getElementById("dupes").innerHTML = html;
+}
+
+/* ---------- quick entry: a / f / r (+t team, +i invert on album) ----------
+   space separates stickers · double space ends the entry
+   ("," and "." are quietly accepted as equivalents — iOS turns double-space into ". ") */
+function qlog(logId, cls, msg){
+  var log = document.getElementById(logId);
+  var line = document.createElement("div");
+  line.className = cls; line.textContent = msg;
+  log.prepend(line);
+  while(log.children.length > 8) log.lastChild.remove();
+}
+function resolveTok(tok, st){
+  var tm = tok.match(/^([a-z]{2,3})?(\d+)(?:x(\d+))?$/);
+  if(!tm) return null;
+  if(tm[1]) st.lastCode = tm[1];
+  var code = (st.lastCode||"").toUpperCase();
+  if(CODE_ALIASES[code]) code = CODE_ALIASES[code];
+  var idx = (code==="" && tm[2]==="00") ? ID2IDX.get("00") : ID2IDX.get(code + parseInt(tm[2],10));
+  return { idx: idx, n: tm[3] ? parseInt(tm[3],10) : 1, disp: (code||"?") + tm[2] };
+}
+function makeQE(opts){
+  var st = { prefix:"", lastCode:null, findFirst:null };
+  function reset(){ st.prefix=""; st.lastCode=null; st.findFirst=null; }
+  function finish(mode){
+    if(opts.onEnd) opts.onEnd(mode, st);
+    document.getElementById(opts.input).value = "";
+    reset();
+    if(opts.after) opts.after();
+  }
+  function process(){
+    var input = document.getElementById(opts.input);
+    var text = input.value.toLowerCase().replace(/,/g," ").replace(/\./g,"  ");
+    var m = text.match(opts.modeRe);
+    if(!m){ reset(); return; }
+    var mode = m[1], prefix = m[0];
+    if(prefix !== st.prefix){
+      st.prefix = prefix; st.lastCode = null; st.findFirst = null;
+      if(mode === "f" && opts.onFindStart) opts.onFindStart();
+    }
+    var rest = text.slice(prefix.length);
+    var dbl = rest.search(/\s\s|^\s/);          // double space, or a separator with an empty token = end
+    var ended = dbl >= 0;
+    var body = ended ? rest.slice(0, dbl) : rest;
+    var parts = body.split(/\s+/);
+    var remainder = ended ? "" : parts.pop();
+    parts.forEach(function(tok){ if(tok!=="") opts.token(mode, tok, st); });
+    if(ended){ finish(mode); return; }
+    input.value = prefix + remainder;           // committed tokens are consumed
+    if(opts.after) opts.after();
+  }
+  var el = document.getElementById(opts.input);
+  el.addEventListener("input", process);
+  el.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ // Enter also ends the entry
+      var mm = el.value.toLowerCase().match(opts.modeRe);
+      var mode = mm ? mm[1] : null;
+      var rest = mm ? el.value.toLowerCase().slice(mm[0].length).replace(/,/g," ").replace(/\./g," ") : "";
+      rest.split(/\s+/).forEach(function(tok){ if(tok!=="") opts.token(mode, tok, st); });
+      if(mode) finish(mode); else { el.value=""; reset(); }
+    }
+    if(e.key === "Escape"){ el.value=""; reset(); if(opts.onFindStart) opts.onFindStart(); }
+  });
+  return { reset:reset, st:st };
+}
+
+/* --- dupes context: acts on SPARES --- */
+var qeDupes = makeQE({
+  input:"qinput", modeRe:/^(a|f|r)(t?)/,
+  after: renderDupes,
+  token: function(mode, tok, st){
+    var r = resolveTok(tok, st);
+    if(!r){ qlog("qlog","lbad","✗ didn't understand: "+tok); return; }
+    if(r.idx === undefined){ qlog("qlog","lbad","✗ unknown sticker: "+r.disp); return; }
+    var s = STICKERS[r.idx], cur = state.dupes.get(r.idx)||0;
+    if(mode === "a"){
+      var now = setDupe(r.idx, cur + r.n);
+      qlog("qlog","lok","＋ "+s.id+" ×"+r.n+"  (now ×"+now+")");
+    } else if(mode === "r"){
+      if(cur === 0) qlog("qlog","lnf","— "+s.id+" had no spares");
+      else { var left = setDupe(r.idx, cur - r.n); qlog("qlog","lrm","− "+s.id+" ×"+Math.min(r.n,cur)+"  (now ×"+left+")"); }
+    } else if(mode === "f"){
+      if(cur > 0) qlog("qlog","lok","✓ "+s.id+" — owned, ×"+cur+" spare");
+      else if(state.have.has(r.idx)) qlog("qlog","lnf","○ "+s.id+" — owned, no spares");
+      else qlog("qlog","lbad","✗ "+s.id+" — MISSING (you need this!)");
+    }
+  }
+});
+
+/* --- album context: acts on CARDS; xN in add mode = copies (1 fills the slot, rest are spares) --- */
+var HL = [];
+function clearHL(){
+  HL.forEach(function(i){
+    var el = document.querySelector('#scr-album [data-i="'+i+'"]');
+    if(el){ el.classList.remove("hlv","hlm"); }
+  });
+  HL = [];
+}
+var qeAlbum = makeQE({
+  input:"qalbum", modeRe:/^(a|f|r|i)(t?)/,
+  onFindStart: clearHL,
+  onEnd: function(mode, st){
+    if(mode === "f" && st.findFirst){
+      var el = document.getElementById("t-"+st.findFirst) || document.getElementById("album");
+      el.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+  },
+  token: function(mode, tok, st){
+    if(mode === "i"){ // invert: tokens are team codes
+      var code = tok.toUpperCase(); if(CODE_ALIASES[code]) code = CODE_ALIASES[code];
+      if(!ID2IDX.has(code+"1")){ qlog("qloga","lbad","✗ unknown team: "+tok); return; }
+      for(var n=1;n<=CONFIG.perTeam;n++){ var i=ID2IDX.get(code+n); setHave(i, !state.have.has(i)); }
+      var owned = 0; for(n=1;n<=CONFIG.perTeam;n++) if(state.have.has(ID2IDX.get(code+n))) owned++;
+      qlog("qloga","lok","⇄ "+code+" inverted (now "+owned+"/20)");
+      return;
+    }
+    var r = resolveTok(tok, st);
+    if(!r){ qlog("qloga","lbad","✗ didn't understand: "+tok); return; }
+    if(r.idx === undefined){ qlog("qloga","lbad","✗ unknown sticker: "+r.disp); return; }
+    var s = STICKERS[r.idx];
+    var haveIt = state.have.has(r.idx), spares = state.dupes.get(r.idx)||0;
+    if(mode === "a"){
+      var newSpares = spares + r.n - (haveIt ? 0 : 1);
+      setHave(r.idx, true);
+      setDupe(r.idx, newSpares);
+      qlog("qloga","lok","＋ "+s.id+" owned"+(newSpares>0 ? " · ×"+newSpares+" spare" : ""));
+    } else if(mode === "r"){
+      var copies = (haveIt ? 1 : 0) + spares;
+      if(copies === 0){ qlog("qloga","lnf","— "+s.id+" wasn't owned"); return; }
+      var left = Math.max(0, copies - r.n);
+      if(left === 0) setHave(r.idx, false);
+      else setDupe(r.idx, left - 1);
+      qlog("qloga","lrm","− "+s.id+"  (now "+(left===0 ? "missing" : "owned"+(left>1 ? " · ×"+(left-1)+" spare" : ""))+")");
+    } else if(mode === "f"){
+      var el = document.querySelector('#scr-album [data-i="'+r.idx+'"]');
+      if(el){ el.classList.add(haveIt ? "hlv" : "hlm"); HL.push(r.idx); }
+      if(!st.findFirst) st.findFirst = (s.group==="SPECIAL") ? null : s.code;
+      qlog("qloga", haveIt ? "lok" : "lbad", (haveIt ? "✓ " : "✗ ")+s.id+" — "+(haveIt ? "owned" : "missing"));
+    }
+  }
+});
+
+/* pressing a / f / r / i anywhere jumps to the right quick entry */
+document.addEventListener("keydown", function(e){
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  var tag = (document.activeElement && document.activeElement.tagName) || "";
+  if(tag === "INPUT" || tag === "TEXTAREA") return;
+  if(e.key !== "a" && e.key !== "f" && e.key !== "r" && e.key !== "i") return;
+  e.preventDefault();
+  var onDupes = document.querySelector('nav [data-tab="dupes"]').getAttribute("aria-selected")==="true";
+  var toAlbum = (e.key === "i") || !onDupes;
+  if(toAlbum){
+    document.querySelector('nav [data-tab="album"]').click();
+    var fold = document.getElementById("qafold");
+    fold.open = true; state.qaOpen = true; persistNow();
+    var q = document.getElementById("qalbum");
+    q.value = e.key; qeAlbum.reset(); q.focus();
+    fold.scrollIntoView({behavior:"smooth", block:"start"});
+  } else {
+    var qd = document.getElementById("qinput");
+    qd.value = e.key; qeDupes.reset(); qd.focus();
+  }
+});
+
+/* swap screen */
+function shareURL(){ return location.href.split("#")[0] + "#" + buildPayload(); }
+function copyText(t, label){
+  var done = function(){ toast(label+" copied"); };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done, function(){ fallbackCopy(t); done(); }); }
+  else { fallbackCopy(t); done(); }
+}
+function fallbackCopy(t){
+  var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand("copy"); }catch(e){} ta.remove();
+}
+document.getElementById("copylink").addEventListener("click", function(){ syncProfile(); copyText(shareURL(), "Link"); });
+document.getElementById("copycode").addEventListener("click", function(){ syncProfile(); copyText(buildPayload(), "Code"); });
+function syncProfile(){
+  state.name = document.getElementById("myname").value.trim();
+  state.extras = document.getElementById("myextras").value.trim();
+  persist();
+}
+document.getElementById("comparebtn").addEventListener("click", function(){
+  var msg = document.getElementById("comparemsg"), wrap = document.getElementById("matchwrap");
+  var them = parsePayload(document.getElementById("theirbox").value);
+  msg.innerHTML=""; wrap.innerHTML="";
+  if(them.err){ msg.innerHTML = '<p class="err">'+them.err+'</p>'; return; }
+  var mine = buildPayload();
+  if(document.getElementById("theirbox").value.indexOf(mine) >= 0){
+    msg.innerHTML = '<p class="err">That looks like your own code — paste your friend\u2019s instead.</p>'; return;
+  }
+  var youGet=[], youGive=[];
+  them.dupes.forEach(function(c,i){ if(!state.have.has(i)) youGet.push([i,c]); });
+  state.dupes.forEach(function(c,i){ if(!them.have.has(i)) youGive.push([i,c]); });
+  youGet.sort(function(a,b){return a[0]-b[0];}); youGive.sort(function(a,b){return a[0]-b[0];});
+  var li = function(e){ var s=STICKERS[e[0]]; return "<li><b>"+s.id+"</b>"+(e[1]>1?" ×"+e[1]:"")+" <span style='color:var(--muted)'>"+ (s.group==="SPECIAL"? s.teamName : s.teamName) +"</span></li>"; };
+  var textOf = function(arr){ return arr.map(function(e){var s=STICKERS[e[0]]; return s.id+(e[1]>1?"x"+e[1]:"");}).join(", "); };
+  var who = them.name ? them.name : "Your friend";
+  var banner = '<div class="banner"><b>'+who+'</b> · '+ (them.have? Array.from(them.have).length:0) +' / '+TOTAL+' collected' +
+               (them.extras? '<br><span class="x">Extras: '+escapeHTML(them.extras)+'</span>' : "") + '</div>';
+  var noOverlap = (!youGet.length && !youGive.length) ? '<p class="hint">No overlap this time — neither of you has spares the other needs.</p>' : "";
+  wrap.innerHTML =
+    '<div class="card">'+banner+
+    '<div class="match">'+
+      '<div class="col get"><h3>You get</h3><div class="total">'+youGet.length+'</div><ul>'+youGet.map(li).join("")+'</ul></div>'+
+      '<div class="col give"><h3>You give</h3><div class="total">'+youGive.length+'</div><ul>'+youGive.map(li).join("")+'</ul></div>'+
+    '</div>'+ noOverlap +
+    '<div class="rowbtns">'+
+      (youGet.length? '<button class="btn ghost" data-copy="get">Copy “you get” list</button>':"")+
+      (youGive.length? '<button class="btn ghost" data-copy="give">Copy “you give” list</button>':"")+
+    '</div></div>';
+  wrap.querySelectorAll("[data-copy]").forEach(function(b){
+    b.addEventListener("click", function(){
+      copyText(textOf(b.dataset.copy==="get"?youGet:youGive), "List");
+    });
+  });
+});
+function escapeHTML(s){ return s.replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* tabs */
+document.querySelectorAll("nav [data-tab]").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    document.querySelectorAll("nav [data-tab]").forEach(function(b){ b.setAttribute("aria-selected", b===btn); });
+    document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+    document.getElementById("scr-"+btn.dataset.tab).classList.add("active");
+    if(btn.dataset.tab==="dupes") renderDupes();
+    window.scrollTo(0,0);
+  });
+});
+
+/* reset */
+document.getElementById("reset").addEventListener("click", function(){
+  if(!confirm("Wipe everything you\u2019ve marked? This can\u2019t be undone.")) return;
+  state = { have:new Set(), dupes:new Map(), name:state.name, extras:state.extras, helpOpen:state.helpOpen, ixOpen:state.ixOpen, helpDOpen:state.helpDOpen, qaOpen:state.qaOpen };
+  persist(); renderAlbum(); updateCounters(); toast("Cleared");
+});
+
+/* team index: book-style opening page, tap to jump, live progress */
+function renderIndex(){
+  var html = "";
+  CONFIG.groups.forEach(function(g){
+    var ink = inkFor(g[1]);
+    html += '<div class="ixg" style="background:'+g[1]+';color:'+ink+'">'+
+            '<span class="big"><b>'+g[0]+'</b><small data-prgroup="'+g[0]+'">0/80</small></span>';
+    g[2].forEach(function(t){
+      html += '<button data-jump="'+t[0]+'"><span class="f">'+(FLAGS[t[0]]||"")+'</span>'+
+              '<span class="nm">'+t[1]+'</span><span class="pr" data-prteam="'+t[0]+'">0/20</span></button>';
+    });
+    html += '</div>';
+  });
+  document.getElementById("indexgrid").innerHTML = html;
+  updateIndexCounts();
+}
+function updateIndexCounts(){
+  var teamN = {}, groupN = {};
+  state.have.forEach(function(i){
+    var s = STICKERS[i]; if(s.group==="SPECIAL") return;
+    teamN[s.code] = (teamN[s.code]||0) + 1;
+    groupN[s.group] = (groupN[s.group]||0) + 1;
+  });
+  document.querySelectorAll("[data-prteam]").forEach(function(el){
+    el.textContent = (teamN[el.dataset.prteam]||0) + "/" + CONFIG.perTeam;
+  });
+  document.querySelectorAll("[data-prgroup]").forEach(function(el){
+    el.textContent = (groupN[el.dataset.prgroup]||0) + "/" + (CONFIG.perTeam*4);
+  });
+}
+document.getElementById("indexgrid").addEventListener("click", function(e){
+  var b = e.target.closest("[data-jump]"); if(!b) return;
+  var el = document.getElementById("t-"+b.dataset.jump);
+  if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+/* fold cards: remember open/closed, ? button opens the current tab's help */
+(function(){
+  var det = document.getElementById("howto");
+  var detD = document.getElementById("howto-d");
+  var ix = document.getElementById("teamix");
+  var qa = document.getElementById("qafold");
+  qa.addEventListener("toggle", function(){ state.qaOpen = qa.open; persistNow(); });
+  det.addEventListener("toggle", function(){ state.helpOpen = det.open; persistNow(); });
+  detD.addEventListener("toggle", function(){ state.helpDOpen = detD.open; persistNow(); });
+  ix.addEventListener("toggle", function(){ state.ixOpen = ix.open; persistNow(); });
+  document.getElementById("helpbtn").addEventListener("click", function(){
+    var onDupes = document.querySelector('nav [data-tab="dupes"]').getAttribute("aria-selected")==="true";
+    var target = onDupes ? detD : det;
+    if(!onDupes) document.querySelector('nav [data-tab="album"]').click();
+    target.open = true;
+    if(onDupes) state.helpDOpen = true; else state.helpOpen = true;
+    persistNow();
+    target.scrollIntoView({behavior:"smooth", block:"start"});
+  });
+})();
+
+/* toast */
+var toastTimer=null;
+function toast(msg){
+  var t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove("show"); }, 1600);
+}
+
+/* ================= boot ================= */
+(async function(){
+  await restore();
+  document.getElementById("myname").value = state.name;
+  document.getElementById("myextras").value = state.extras;
+  document.getElementById("howto").open = state.helpOpen!==false;
+  document.getElementById("howto-d").open = state.helpDOpen!==false;
+  document.getElementById("teamix").open = state.ixOpen!==false;
+  document.getElementById("qafold").open = state.qaOpen===true;
+  renderAlbum(); renderIndex(); updateCounters();
+  /* opened via a friend's link? jump straight to the match */
+  if(location.hash && location.hash.indexOf("h=")>=0){
+    document.getElementById("theirbox").value = location.hash.slice(1);
+    document.querySelector('nav [data-tab="swap"]').click();
+    document.getElementById("comparebtn").click();
+  }
+})();
+</script>
+</body>
+</html>
