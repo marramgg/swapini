@@ -242,11 +242,12 @@
   .toast.show{opacity:1;}
   .danger{color:#F0A088; font-size:13px; text-decoration:underline; margin:20px auto 8px; display:block; text-align:center;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 </head>
 <body>
 
 <header>
-  <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button></div>
+  <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><button class="helpbtn" id="qrbtn" aria-label="QR Code Sync" style="display:none; font-size:11px; letter-spacing:0.5px">QR</button><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button></div>
   <div class="progress-wrap">
     <button class="hamburger" id="hamburgermenu" aria-label="Menu">☰</button>
     <div class="progress"><div class="bar"><i id="barfill"></i></div><span class="stat" id="topstat">0 / 980</span></div>
@@ -269,7 +270,7 @@
       <p class="hint" style="margin:0 0 6px">
         <b>2 · Dupes</b> — once a card is owned, a <b>− 0 +</b> strip appears on it: mark spare copies right there. The Dupes tab lists them A→Z and has a fast keyboard entry mode.</p>
       <p class="hint" style="margin:0">
-        <b>3 · Swap</b> — copy your link and send it on WhatsApp. Paste a friend's link to instantly see who gives what. To sync phone to laptop, send the link to yourself as a "note to self" on WhatsApp.</p>
+        <b>3 · Swap</b> — copy your link and send it on WhatsApp. Paste a friend's link to instantly see who gives what. To sync your album to another device, copy your link and send it to yourself (e.g. via WhatsApp's "Note to self"), or tap the QR icon to scan it directly.</p>
     </details>
     <details class="card fold" id="teamix" open>
       <summary>Team index</summary>
@@ -348,6 +349,15 @@
 </main>
 
 <div class="modal-overlay" id="modal"><div class="modal-box" id="modalbody"></div></div>
+
+<div class="modal-overlay" id="qrmodal">
+  <div class="modal-box">
+    <h2>Scan to Sync</h2>
+    <p class="hint" style="margin-top:0">Scan this code with another device to sync your album data.</p>
+    <div class="qr-wrap" id="qrwrap"></div>
+    <div class="rowbtns"><button class="btn ghost" onclick="document.getElementById('qrmodal').classList.remove('open')">Close</button></div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -1029,6 +1039,22 @@ function toast(msg){
   clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove("show"); }, 1600);
 }
 
+/* QR Sync */
+if(typeof window.qrcode !== "undefined"){
+  var qrbtn = document.getElementById("qrbtn");
+  qrbtn.style.display = "";
+  qrbtn.addEventListener("click", function(){
+    syncProfile();
+    var url = shareURL() + "&sync=1";
+    var qr = window.qrcode(0, 'L');
+    qr.addData(url);
+    qr.make();
+    var wrap = document.getElementById("qrwrap");
+    wrap.innerHTML = qr.createImgTag(5, 0) + '<div class="code-text">' + escapeHTML(url) + '</div>';
+    document.getElementById("qrmodal").classList.add("open");
+  });
+}
+
 /* ================= boot ================= */
 (async function(){
   await restore();
@@ -1039,11 +1065,30 @@ function toast(msg){
   document.getElementById("teamix").open = state.ixOpen!==false;
   document.getElementById("qafold").open = state.qaOpen===true;
   renderAlbum(); renderIndex(); updateCounters();
-  /* opened via a friend's link? jump straight to the match */
+  
+  /* opened via a link? */
   if(location.hash && location.hash.indexOf("h=")>=0){
-    document.getElementById("theirbox").value = location.hash.slice(1);
-    document.querySelector('nav [data-tab="swap"]').click();
-    document.getElementById("comparebtn").click();
+    if(location.hash.indexOf("sync=1")>=0){
+      var parsed = parsePayload(location.hash.slice(1));
+      if(!parsed.err){
+        if(confirm("Replace your current album data with the data from this link? This cannot be undone.")){
+          state.have = parsed.have || new Set();
+          state.dupes = parsed.dupes || new Map();
+          state.name = parsed.name || "";
+          state.extras = parsed.extras || "";
+          persist();
+          renderAlbum(); renderIndex(); updateCounters();
+          toast("Data synced successfully.");
+          history.replaceState(null, "", location.pathname);
+        }
+      } else {
+        alert(parsed.err);
+      }
+    } else {
+      document.getElementById("theirbox").value = location.hash.slice(1);
+      document.querySelector('nav [data-tab="swap"]').click();
+      document.getElementById("comparebtn").click();
+    }
   }
 })();
 </script>
