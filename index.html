@@ -20,7 +20,7 @@
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--pitch); color:var(--paper);
     font-family:-apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;}
-  body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+  body{padding-bottom:env(safe-area-inset-bottom);}
   button{font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer;}
   button:focus-visible, input:focus-visible, textarea:focus-visible{outline:3px solid var(--foil-hi); outline-offset:2px;}
 
@@ -31,11 +31,14 @@
   .brand h1{margin:0; font-size:20px; letter-spacing:.5px; font-weight:900; text-transform:uppercase;}
   .brand h1 em{font-style:normal; color:var(--foil);}
   .brand .album{font-size:12px; color:var(--muted);}
-  .progress{margin-top:8px; display:flex; align-items:center; gap:10px;}
+  .progress-wrap{margin-top:8px; display:flex; align-items:center; gap:10px;}
+  .progress{flex:1; display:flex; align-items:center; gap:10px;}
   .bar{flex:1; height:6px; border-radius:3px; background:var(--line); overflow:hidden;}
   .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--foil),var(--foil-hi)); transition:width .25s;}
   @media (prefers-reduced-motion:reduce){ .bar>i{transition:none;} }
   .stat{font-variant-numeric:tabular-nums; font-size:13px; color:var(--paper); white-space:nowrap;}
+  .hamburger{flex:none; width:28px; height:28px; border:1px solid var(--line); border-radius:6px; background:var(--pitch-deep); color:var(--paper); font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .hamburger:active{background:var(--line);}
 
   /* ---------- sections & grids ---------- */
   main{padding:0 10px;}
@@ -162,15 +165,75 @@
   .banner .x{color:var(--muted); font-size:13px;}
   .rowbtns{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
 
-  /* ---------- tabs ---------- */
-  nav{position:fixed; bottom:0; left:0; right:0; z-index:40; display:flex;
-    background:var(--pitch-deep); border-top:1px solid var(--line);
-    padding-bottom:env(safe-area-inset-bottom);}
-  nav button{flex:1; padding:12px 0 10px; font-size:13px; font-weight:700; color:var(--muted);
-    display:flex; flex-direction:column; align-items:center; gap:2px;}
-  nav button .big{font-size:17px; line-height:1;}
-  nav button[aria-selected=true]{color:var(--foil-hi);}
-  nav button[aria-selected=true]::after{content:""; width:26px; height:3px; border-radius:2px; background:var(--foil); margin-top:3px;}
+  /* ---------- settle ---------- */
+  .col li{display:flex; align-items:center; gap:6px;}
+  .col li label{display:flex; align-items:center; gap:6px; flex:1; cursor:pointer;}
+  .col li input[type=checkbox]{appearance:none; -webkit-appearance:none; width:20px; height:20px; flex:none;
+    border:2px solid var(--line); border-radius:5px; background:transparent; cursor:pointer; position:relative;}
+  .col li input[type=checkbox]:checked{background:var(--foil); border-color:var(--foil);}
+  .col li input[type=checkbox]:checked::after{content:"✓"; position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#2B2104;}
+  .settle-bar{position:sticky; bottom:68px; z-index:25; margin:12px -10px 0; padding:10px 14px;
+    background:var(--pitch-deep); border-top:1px solid var(--line); display:flex; align-items:center; gap:10px;
+    font-size:14px; font-weight:700;}
+  .settle-bar .counts{flex:1; display:flex; gap:12px;}
+  .settle-bar .ct-give{color:#F0B48F;}
+  .settle-bar .ct-get{color:#9CD3A8;}
+  .settle-bar .balance{font-size:12px; padding:4px 10px; border-radius:999px; font-weight:800;}
+  .settle-bar .balance.ok{background:var(--get); color:#fff;}
+  .settle-bar .balance.bad{background:#7D2E2E; color:#F0A088;}
+  .settle-bar .btn{font-size:13px; padding:8px 14px;}
+  .settle-bar .btn:disabled{opacity:.35; pointer-events:none;}
+
+  /* ---------- modal ---------- */
+  .modal-overlay{position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.7);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .2s;}
+  .modal-overlay.open{opacity:1; pointer-events:auto;}
+  @media (prefers-reduced-motion:reduce){ .modal-overlay{transition:none;} }
+  .modal-box{background:var(--pitch-deep); border:1px solid var(--line); border-radius:16px;
+    padding:20px; max-width:380px; width:100%; max-height:80vh; overflow-y:auto;}
+  .modal-box h2{margin:0 0 12px; font-size:17px; color:var(--foil); text-transform:uppercase; letter-spacing:.5px;}
+  .modal-box .settle-list{list-style:none; margin:0 0 12px; padding:0; font-size:14px; line-height:1.8;}
+  .modal-box .settle-list.recv li::before{content:"＋ "; color:#9CD3A8; font-weight:900;}
+  .modal-box .settle-list.give li::before{content:"− "; color:#F0B48F; font-weight:900;}
+  .modal-box .settle-summary{font-size:15px; font-weight:800; margin:8px 0 16px; padding:10px;
+    background:rgba(201,162,39,.1); border:1px solid var(--foil); border-radius:var(--radius); text-align:center;}
+  .modal-box .rowbtns{justify-content:center;}
+  .qr-wrap{display:flex; flex-direction:column; align-items:center; gap:12px; margin:12px 0;}
+  .qr-wrap canvas{border-radius:8px; background:#fff; padding:12px; image-rendering:pixelated;}
+  .qr-wrap .code-text{width:100%; word-break:break-all; font-family:ui-monospace,Menlo,monospace;
+    font-size:11px; padding:8px; background:var(--pitch); border:1px solid var(--line); border-radius:8px;
+    max-height:80px; overflow-y:auto; color:var(--muted);}
+
+  /* ---------- history ---------- */
+  .tx-card{background:var(--pitch-deep); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin:10px 2px;}
+  .tx-card.undone{opacity:.5;}
+  .tx-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .tx-head .tx-time{font-size:12px; color:var(--muted); flex:1;}
+  .tx-head .tx-name{font-weight:800; font-size:14px;}
+  .tx-head .tx-badge{font-size:11px; padding:3px 8px; border-radius:999px; font-weight:800;}
+  .tx-head .tx-badge.done{background:var(--get); color:#fff;}
+  .tx-head .tx-badge.rev{background:var(--line); color:var(--muted);}
+  .tx-section{margin:4px 0;}
+  .tx-section h4{margin:0 0 2px; font-size:12px; text-transform:uppercase; letter-spacing:.5px;}
+  .tx-section.recv h4{color:#9CD3A8;}
+  .tx-section.give h4{color:#F0B48F;}
+  .tx-section .stickers{font-size:13px; line-height:1.7; color:var(--paper);}
+  .tx-undo-btn{font-size:12px; padding:6px 12px; border:1px solid var(--line);
+    border-radius:999px; color:var(--paper); margin-top:8px;}
+  .tx-undo-btn:active{background:var(--line);}
+
+  /* ---------- menu ---------- */
+  nav{position:absolute; top:calc(100% + 4px); left:14px; z-index:100; display:none; flex-direction:column;
+    background:var(--pitch-deep); border:1px solid var(--line); border-radius:12px;
+    padding:8px 0; box-shadow:0 10px 30px rgba(0,0,0,0.6); min-width:180px;}
+  nav.open{display:flex;}
+  nav button{width:100%; padding:12px 16px; font-size:15px; font-weight:700; color:var(--muted);
+    display:flex; align-items:center; gap:12px;}
+  nav button .big{font-size:18px; width:24px; text-align:center;}
+  nav button[aria-selected=true]{color:var(--foil-hi); background:rgba(255,255,255,0.05);}
 
   .screen{display:none;} .screen.active{display:block;}
   .toast{position:fixed; left:50%; bottom:84px; transform:translateX(-50%);
@@ -184,7 +247,16 @@
 
 <header>
   <div class="brand"><h1>Swap<em>ini</em></h1><span class="album">FIFA World Cup 2026 · Panini</span><button class="helpbtn" id="helpbtn" aria-label="How it works">?</button></div>
-  <div class="progress"><div class="bar"><i id="barfill"></i></div><span class="stat" id="topstat">0 / 980</span></div>
+  <div class="progress-wrap">
+    <button class="hamburger" id="hamburgermenu" aria-label="Menu">☰</button>
+    <div class="progress"><div class="bar"><i id="barfill"></i></div><span class="stat" id="topstat">0 / 980</span></div>
+  </div>
+  <nav role="tablist" id="mainnav">
+    <button role="tab" aria-selected="true" data-tab="album"><span class="big">▦</span>Album</button>
+    <button role="tab" aria-selected="false" data-tab="dupes"><span class="big">×2</span>Dupes</button>
+    <button role="tab" aria-selected="false" data-tab="swap"><span class="big">⇄</span>Swap</button>
+    <button role="tab" aria-selected="false" data-tab="history"><span class="big">📋</span>History</button>
+  </nav>
 </header>
 
 <main>
@@ -197,7 +269,7 @@
       <p class="hint" style="margin:0 0 6px">
         <b>2 · Dupes</b> — once a card is owned, a <b>− 0 +</b> strip appears on it: mark spare copies right there. The Dupes tab lists them A→Z and has a fast keyboard entry mode.</p>
       <p class="hint" style="margin:0">
-        <b>3 · Swap</b> — copy your link and send it on WhatsApp. Paste a friend's link to instantly see who gives what.</p>
+        <b>3 · Swap</b> — copy your link and send it on WhatsApp. Paste a friend's link to instantly see who gives what. To sync phone to laptop, send the link to yourself as a "note to self" on WhatsApp.</p>
     </details>
     <details class="card fold" id="teamix" open>
       <summary>Team index</summary>
@@ -260,14 +332,22 @@
       <div id="comparemsg"></div>
     </div>
     <div id="matchwrap"></div>
+    <div id="settlebar"></div>
+    <div class="card" id="settlepaste" style="display:none">
+      <h2>Apply a settle code</h2>
+      <div class="field"><label for="settlebox">Paste the settle code from your swap partner</label><textarea id="settlebox"></textarea></div>
+      <button class="btn" id="settleapplybtn">Preview &amp; confirm</button>
+      <div id="settlemsg"></div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="scr-history" class="screen">
+    <div id="historylist"></div>
   </section>
 </main>
 
-<nav role="tablist">
-  <button role="tab" aria-selected="true" data-tab="album"><span class="big">▦</span>Album</button>
-  <button role="tab" aria-selected="false" data-tab="dupes"><span class="big">×2</span>Dupes</button>
-  <button role="tab" aria-selected="false" data-tab="swap"><span class="big">⇄</span>Swap</button>
-</nav>
+<div class="modal-overlay" id="modal"><div class="modal-box" id="modalbody"></div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -848,12 +928,24 @@ document.getElementById("comparebtn").addEventListener("click", function(){
 function escapeHTML(s){ return s.replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
 
 /* tabs */
+document.getElementById("hamburgermenu").addEventListener("click", function(e){
+  e.stopPropagation();
+  document.getElementById("mainnav").classList.toggle("open");
+});
+document.addEventListener("click", function(e){
+  if(!e.target.closest("#mainnav")) {
+    var nav = document.getElementById("mainnav");
+    if (nav) nav.classList.remove("open");
+  }
+});
+
 document.querySelectorAll("nav [data-tab]").forEach(function(btn){
   btn.addEventListener("click", function(){
     document.querySelectorAll("nav [data-tab]").forEach(function(b){ b.setAttribute("aria-selected", b===btn); });
     document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
     document.getElementById("scr-"+btn.dataset.tab).classList.add("active");
     if(btn.dataset.tab==="dupes") renderDupes();
+    document.getElementById("mainnav").classList.remove("open");
     window.scrollTo(0,0);
   });
 });
@@ -883,16 +975,24 @@ function renderIndex(){
 }
 function updateIndexCounts(){
   var teamN = {}, groupN = {};
+  var teamD = {}, groupD = {};
   state.have.forEach(function(i){
     var s = STICKERS[i]; if(s.group==="SPECIAL") return;
     teamN[s.code] = (teamN[s.code]||0) + 1;
     groupN[s.group] = (groupN[s.group]||0) + 1;
   });
+  state.dupes.forEach(function(c, i){
+    var s = STICKERS[i]; if(!s || s.group==="SPECIAL") return;
+    teamD[s.code] = (teamD[s.code]||0) + c;
+    groupD[s.group] = (groupD[s.group]||0) + c;
+  });
   document.querySelectorAll("[data-prteam]").forEach(function(el){
-    el.textContent = (teamN[el.dataset.prteam]||0) + "/" + CONFIG.perTeam;
+    var d = teamD[el.dataset.prteam]||0;
+    el.textContent = (teamN[el.dataset.prteam]||0) + "/" + CONFIG.perTeam + (d > 0 ? "+" + d : "");
   });
   document.querySelectorAll("[data-prgroup]").forEach(function(el){
-    el.textContent = (groupN[el.dataset.prgroup]||0) + "/" + (CONFIG.perTeam*4);
+    var d = groupD[el.dataset.prgroup]||0;
+    el.textContent = (groupN[el.dataset.prgroup]||0) + "/" + (CONFIG.perTeam*4) + (d > 0 ? "+" + d : "");
   });
 }
 document.getElementById("indexgrid").addEventListener("click", function(e){
