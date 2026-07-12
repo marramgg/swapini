@@ -11,5 +11,3 @@ Your friend opens it and instantly sees **you give / you get**.
 - Uses [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (via CDN) for local device-to-device sync
 
 **Note:** This project is mostly "vibe coded", so it most likely contains bugs—but that's fine! It's meant to be a simple, throwaway utility for the World Cup.
-
-Live at: `https://<username>.github.io/<repo>/` (GitHub Pages, deploys on push to `main`)
